@@ -13,7 +13,8 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "sync": "npm run sync -w @rmm/core --",
-    "discover": "npm run discover -w @rmm/core"
+    "discover": "npm run discover -w @rmm/core",
+    "serve": "npm run start -w @rmm/server"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
