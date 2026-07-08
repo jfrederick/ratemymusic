@@ -44,6 +44,40 @@ describe("Playlists", () => {
     expect(link.getAttribute("href")).toBe("/auth/spotify");
   });
 
+  it("renders a valid date and a working Open link from a populated camelCase history row", async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.startsWith("/api/queue")) return jsonResponse([]);
+      if (url.startsWith("/api/candidates")) return jsonResponse({ items: [], total: 0 });
+      if (url.startsWith("/api/playlists")) {
+        return jsonResponse([
+          {
+            id: 7,
+            spotifyId: "3cEYpjA9oz9GiPac4AsH4n",
+            name: "RYM Discoveries — 2026-07-01",
+            mode: "sampler",
+            createdAt: "2026-07-01T12:00:00.000Z",
+            trackCount: 42,
+          },
+        ]);
+      }
+      return jsonResponse({});
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderPlaylists();
+
+    await waitFor(() => screen.getByText(/RYM Discoveries — 2026-07-01/));
+
+    const meta = screen.getByText(/sampler.*42 tracks/);
+    expect(meta.textContent).not.toMatch(/Invalid Date/);
+
+    const openLink = screen.getByRole("link", { name: /open/i });
+    expect(openLink.getAttribute("href")).toBe(
+      "https://open.spotify.com/playlist/3cEYpjA9oz9GiPac4AsH4n",
+    );
+  });
+
   it("shows the same connect CTA for a 409 on the daily push", async () => {
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);

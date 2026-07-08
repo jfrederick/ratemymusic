@@ -68,10 +68,10 @@ export type PlaylistMode = "sampler" | "top" | "deep";
 
 export type PlaylistSummary = {
   id: number;
-  spotify_id: string;
+  spotifyId: string;
   name: string;
   mode: PlaylistMode;
-  created_at: string;
+  createdAt: string;
   trackCount: number;
 };
 
@@ -81,10 +81,18 @@ export type CreatePlaylistBody = {
   albumIds?: number[];
 };
 
+/** Result of POST /api/playlists (buildAndPushPlaylist). */
 export type CreatePlaylistResult = {
   spotifyPlaylistId: string;
   trackCount: number;
-  unresolved: number;
+  unresolved: number[];
+};
+
+/** Result of POST /api/playlists/daily (pushDaily) — no `unresolved` field. */
+export type PushDailyResult = {
+  spotifyPlaylistId: string;
+  trackCount: number;
+  albums: number[];
 };
 
 export type CandidateQuery = {
@@ -205,7 +213,7 @@ export const api = {
 
   getPlaylists: (): Promise<PlaylistSummary[]> => request("/api/playlists"),
 
-  createDailyPlaylist: (): Promise<CreatePlaylistResult> =>
+  createDailyPlaylist: (): Promise<PushDailyResult> =>
     request("/api/playlists/daily", { method: "POST" }),
 
   sync: (maxPages?: number): Promise<SyncReport> =>

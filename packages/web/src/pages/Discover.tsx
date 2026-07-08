@@ -130,11 +130,13 @@ export function Discover() {
     if (index === -1) return;
     const [removed] = items.slice(index, index + 1);
     setItems((current) => current.filter((c) => c.albumId !== albumId));
+    setTotal((current) => Math.max(0, current - 1));
     withBusy(albumId, async () => {
       try {
         await apiCall();
       } catch (err) {
         restoreOnFailure(removed, index);
+        setTotal((current) => current + 1);
         push(describeError(err), "error");
       }
     });

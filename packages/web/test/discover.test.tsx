@@ -114,6 +114,38 @@ describe("Discover", () => {
     });
   });
 
+  it("decrements the load-more total when a card is dismissed, and restores it on failure", async () => {
+    const items = [
+      candidate({ albumId: 101 }),
+      candidate({ albumId: 102, title: "Voids", artist: "Other Artist" }),
+    ];
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/dismiss") && init?.method === "POST") {
+        return jsonResponse({ error: "server exploded" }, 500);
+      }
+      if (url.startsWith("/api/candidates")) return jsonResponse({ items, total: 6 });
+      if (url.startsWith("/api/queue")) return jsonResponse([]);
+      return jsonResponse({});
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderDiscover();
+    await waitFor(() => screen.getByTestId("candidate-101"));
+
+    expect(screen.getByRole("button", { name: /load more \(2 of 6\)/i })).not.toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /dismiss deathconsciousness/i }));
+
+    // Optimistic: the card disappears and the load-more count decrements immediately.
+    expect(screen.queryByTestId("candidate-101")).toBeNull();
+    expect(screen.getByRole("button", { name: /load more \(1 of 5\)/i })).not.toBeNull();
+
+    // The dismiss call fails, so both the card and the total are restored.
+    await waitFor(() => screen.getByTestId("candidate-101"));
+    expect(screen.getByRole("button", { name: /load more \(2 of 6\)/i })).not.toBeNull();
+  });
+
   it("restores the card if the dismiss request fails", async () => {
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);

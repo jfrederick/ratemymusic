@@ -236,14 +236,14 @@ export function Playlists() {
                   <div>
                     <div>{playlist.name}</div>
                     <div className="playlist-row__meta">
-                      {new Date(playlist.created_at).toLocaleDateString()} · {playlist.mode} ·{" "}
+                      {new Date(playlist.createdAt).toLocaleDateString()} · {playlist.mode} ·{" "}
                       {playlist.trackCount} tracks
                     </div>
                   </div>
                   <div className="page-header__actions">
                     <a
                       className="btn btn--ghost btn--small"
-                      href={`https://open.spotify.com/playlist/${playlist.spotify_id}`}
+                      href={`https://open.spotify.com/playlist/${playlist.spotifyId}`}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -261,7 +261,7 @@ export function Playlists() {
                 {expanded.has(playlist.id) && (
                   <iframe
                     title={`Preview of ${playlist.name}`}
-                    src={`https://open.spotify.com/embed/playlist/${playlist.spotify_id}?theme=0`}
+                    src={`https://open.spotify.com/embed/playlist/${playlist.spotifyId}?theme=0`}
                     height={152}
                     style={{ width: "100%", border: "none", borderRadius: "var(--radius-control)" }}
                     allow="encrypted-media"
