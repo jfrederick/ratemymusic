@@ -136,7 +136,11 @@ CREATE INDEX idx_twin_ratings_album_id ON twin_ratings(album_id);
 CREATE INDEX idx_chart_items_album_id ON chart_items(album_id);
 `;
 
-export const MIGRATIONS: string[] = [MIGRATION_1];
+const MIGRATION_2 = `
+ALTER TABLE albums ADD COLUMN spotify_artist_id TEXT;
+`;
+
+export const MIGRATIONS: string[] = [MIGRATION_1, MIGRATION_2];
 
 export function runMigrations(db: DatabaseType): void {
   const currentVersion = db.pragma("user_version", { simple: true }) as number;
