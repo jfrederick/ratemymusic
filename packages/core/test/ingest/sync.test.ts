@@ -178,9 +178,10 @@ describe("runSync: genre-page genre stamping (C1)", () => {
 
     await runSync(db, scraper, { rymUsername: RYM_USERNAME });
 
-    const charts = db
-      .prepare("SELECT id, params FROM charts WHERE kind = 'genre-page'")
-      .all() as { id: number; params: string }[];
+    const charts = db.prepare("SELECT id, params FROM charts WHERE kind = 'genre-page'").all() as {
+      id: number;
+      params: string;
+    }[];
     expect(charts.length).toBeGreaterThan(0);
     const chartGenreById = new Map(
       charts.map((c) => [c.id, (JSON.parse(c.params) as { genre: string }).genre]),

@@ -52,8 +52,17 @@ Pick **one** of these — running both will push the daily playlist twice.
    launchctl load ~/Library/LaunchAgents/com.jim.ratemymusic.daily.plist
    ```
 4. Verify: `launchctl list | grep ratemymusic`. It fires daily at 07:00 local,
-   running `npm run push-daily -w @rmm/core`. Logs land in `data/logs/push-daily.{out,err}.log`.
+   running `npm run daily` (`scripts/daily.mjs`), which chains sync (capped at
+   30 pages) → discover → push-daily -- mirroring the in-process cron pipeline
+   below. Each step runs even if an earlier one fails (e.g. sync hitting its
+   crawl budget); the script exits non-zero if any step failed. Logs land in
+   `data/logs/daily.{out,err}.log`.
 5. To uninstall: `launchctl unload ~/Library/LaunchAgents/com.jim.ratemymusic.daily.plist && rm ~/Library/LaunchAgents/com.jim.ratemymusic.daily.plist`.
+
+   > Before this was fixed, the plist ran only `npm run push-daily -w @rmm/core`
+   > -- the graph never got synced or rescored automatically, so it kept
+   > re-pushing the same stale top candidates. If you have an older plist
+   > installed, re-copy the one in this repo and reload it.
 
 ### Option B: in-process cron (for a server that's always running)
 
