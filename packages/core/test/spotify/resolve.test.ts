@@ -59,6 +59,26 @@ describe("resolveAlbum", () => {
     expect(row.spotify_album_id).toBe("spotify-abc");
   });
 
+  it("persists the primary artist id alongside the resolved album id", async () => {
+    const db = openDb(":memory:");
+    const albumId = insertAlbum(db, {
+      rymUrl: "release/album/a/e/",
+      artist: "Artist",
+      title: "Title",
+    });
+    const searchAlbum = vi.fn(async () => ({
+      id: "spotify-xyz",
+      name: "Title",
+      artistIds: ["artist-primary", "artist-secondary"],
+    }));
+    const sp = fakeSpotifyClient(searchAlbum);
+    await resolveAlbum(db, sp, albumId);
+    const row = db.prepare("SELECT spotify_artist_id FROM albums WHERE id = ?").get(albumId) as {
+      spotify_artist_id: string | null;
+    };
+    expect(row.spotify_artist_id).toBe("artist-primary");
+  });
+
   it("records the unresolved album in settings when search finds nothing", async () => {
     const db = openDb(":memory:");
     const albumId = insertAlbum(db, {

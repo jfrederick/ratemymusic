@@ -32,7 +32,7 @@ async function main(): Promise<void> {
   }
 
   const sp = new SpotifyClient({ auth });
-  const result = await pushDaily(db, sp);
+  const result = await pushDaily(db, sp, { isConnected: () => auth.isConnected() });
   console.log(JSON.stringify(result, null, 2));
 }
 

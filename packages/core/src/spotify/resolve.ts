@@ -19,7 +19,11 @@ export async function resolveAlbum(
 
   const result = await sp.searchAlbum({ artist: row.artist, title: row.title });
   if (result) {
-    db.prepare("UPDATE albums SET spotify_album_id = ? WHERE id = ?").run(result.id, albumId);
+    db.prepare("UPDATE albums SET spotify_album_id = ?, spotify_artist_id = ? WHERE id = ?").run(
+      result.id,
+      result.artistIds[0] ?? null,
+      albumId,
+    );
     return result.id;
   }
 

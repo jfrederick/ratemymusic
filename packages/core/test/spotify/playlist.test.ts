@@ -199,6 +199,28 @@ describe("buildAndPushPlaylist", () => {
     expect(replaceCalls[0]).toHaveLength(150);
   });
 
+  it("passes the album's resolved spotify_artist_id to pickTracks in top mode", async () => {
+    const db = openDb(":memory:");
+    const albumId = insertAlbum(db, {
+      rymUrl: "release/album/f/1/",
+      artist: "Artist",
+      title: "One",
+    });
+    insertCandidate(db, albumId, 0.9);
+
+    const sp = fakeSp({ tracksPerAlbum: 3 });
+    await buildAndPushPlaylist(db, sp, {
+      name: "Top Mode",
+      albumIds: [albumId],
+      mode: "top",
+    });
+
+    // fakeSp's searchAlbum resolves artistIds: ["artist-x"], which resolveAlbum
+    // should have persisted to albums.spotify_artist_id and buildAndPushPlaylist
+    // should read back and forward to pickTracks -> sp.artistTopTracks.
+    expect(sp.artistTopTracks).toHaveBeenCalledWith("artist-x");
+  });
+
   it("replaces an existing playlist in place when replacePlaylistId is set", async () => {
     const db = openDb(":memory:");
     const albumId = insertAlbum(db, {

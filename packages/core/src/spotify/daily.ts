@@ -12,8 +12,17 @@ function defaultToday(): string {
 export async function pushDaily(
   db: DatabaseType,
   sp: SpotifyClient,
-  o: { size?: number; mode?: TrackPickMode; today?: () => string } = {},
+  o: {
+    size?: number;
+    mode?: TrackPickMode;
+    today?: () => string;
+    isConnected?: () => boolean;
+  } = {},
 ): Promise<{ spotifyPlaylistId: string; trackCount: number; albums: number[] }> {
+  if (o.isConnected && !o.isConnected()) {
+    throw new Error("Spotify is not connected — open the app and connect first.");
+  }
+
   const size = o.size ?? 10;
   const mode = o.mode ?? "sampler";
   const today = o.today ?? defaultToday;

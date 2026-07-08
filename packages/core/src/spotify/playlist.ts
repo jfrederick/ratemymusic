@@ -34,11 +34,21 @@ export async function buildAndPushPlaylist(
       unresolved.push(albumId);
       continue;
     }
+
+    let artistId: string | undefined;
+    if (o.mode === "top") {
+      const albumRow = db
+        .prepare("SELECT spotify_artist_id FROM albums WHERE id = ?")
+        .get(albumId) as { spotify_artist_id: string | null } | undefined;
+      artistId = albumRow?.spotify_artist_id ?? undefined;
+    }
+
     const tracks = await pickTracks(sp, {
       spotifyAlbumId,
       mode: o.mode,
       count: o.tracksPerAlbum,
       albumDbId: albumId,
+      artistId,
     });
     picked.push(...tracks);
   }

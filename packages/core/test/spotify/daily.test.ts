@@ -100,4 +100,16 @@ describe("pushDaily", () => {
     const sp = fakeSp();
     await expect(pushDaily(db, sp)).rejects.toThrow(/no eligible candidates/i);
   });
+
+  it("throws a descriptive error when isConnected() reports Spotify is not connected", async () => {
+    const db = openDb(":memory:");
+    for (let i = 0; i < 3; i++) {
+      insertCandidate(db, insertAlbum(db, i), 1 - i * 0.01);
+    }
+    const sp = fakeSp();
+    await expect(pushDaily(db, sp, { isConnected: () => false })).rejects.toThrow(
+      "Spotify is not connected — open the app and connect first.",
+    );
+    expect(sp.createPlaylist).not.toHaveBeenCalled();
+  });
 });
