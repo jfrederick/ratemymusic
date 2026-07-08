@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { StatusResponse, TasteProfile } from "../src/api";
 import { Dashboard } from "../src/pages/Dashboard";
@@ -15,6 +15,7 @@ const status: StatusResponse = {
     budgetExhausted: false,
     counts: { albums: 812, myRatings: 2100, lists: 34, twins: 9, twinRatings: 88, charts: 20 },
   },
+  lastCronError: null,
   tasteProfileComputedAt: "2026-07-01T00:00:00.000Z",
 };
 
@@ -101,5 +102,48 @@ describe("Dashboard", () => {
     renderDashboard();
 
     await waitFor(() => screen.getByText(/hasn't been computed yet/i));
+  });
+
+  it("shows an honest 'N candidates ready' toast after Discover now, not a 'found new' claim (M9)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (url.includes("/api/discover") && init?.method === "POST") {
+          return jsonResponse({ candidates: 12 });
+        }
+        if (url.includes("/api/status")) return jsonResponse(status);
+        if (url.includes("/api/profile")) return jsonResponse(profile);
+        return jsonResponse({});
+      }),
+    );
+
+    renderDashboard();
+    await waitFor(() => screen.getByText("Slowcore"));
+
+    fireEvent.click(screen.getByRole("button", { name: /discover now/i }));
+
+    await waitFor(() => screen.getByText("12 candidates ready."));
+  });
+
+  it("shows a notice when last_cron_error is present (M2)", async () => {
+    const withCronError: StatusResponse = {
+      ...status,
+      lastCronError: { step: "sync", message: "budget exhausted", at: "2026-07-08T07:00:00.000Z" },
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes("/api/status")) return jsonResponse(withCronError);
+        if (url.includes("/api/profile")) return jsonResponse(profile);
+        return jsonResponse({});
+      }),
+    );
+
+    renderDashboard();
+
+    await waitFor(() => screen.getByText(/Last automated run failed at step "sync"/));
+    expect(screen.getByText(/budget exhausted/)).not.toBeNull();
   });
 });

@@ -75,10 +75,10 @@ export function Dashboard() {
     setDiscovering(true);
     try {
       const result = await api.discover();
-      push(
-        `Discover found ${result.candidates} new candidate${result.candidates === 1 ? "" : "s"}.`,
-        "success",
-      );
+      // `result.candidates` is the total count of status='new' candidates after this run, not
+      // the delta produced by it -- "found N new" would overstate/understate what changed. State
+      // it as what it actually is (M9).
+      push(`${result.candidates} candidate${result.candidates === 1 ? "" : "s"} ready.`, "success");
       await load();
     } catch (err) {
       push(describeError(err), "error");
@@ -109,6 +109,13 @@ export function Dashboard() {
       </header>
 
       {error && <p className="error-banner">{error}</p>}
+
+      {status?.lastCronError && (
+        <p className="error-banner">
+          Last automated run failed at step "{status.lastCronError.step}":{" "}
+          {status.lastCronError.message} ({new Date(status.lastCronError.at).toLocaleString()})
+        </p>
+      )}
 
       {loading && !status ? (
         <div className="stack">

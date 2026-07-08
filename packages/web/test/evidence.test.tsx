@@ -109,6 +109,21 @@ describe("buildEvidenceLine", () => {
     expect(buildEvidenceLine(candidate)).toBe('#12 among "melancholic" picks');
   });
 
+  it("omits the position for descriptor evidence when position is 0 (M3)", () => {
+    const candidate = baseCandidate({
+      components: {
+        descriptor: {
+          score: 0.2,
+          evidence: {
+            method: "descriptor",
+            charts: [{ rymUrl: "", descriptor: "melancholic", position: 0 }],
+          },
+        },
+      },
+    });
+    expect(buildEvidenceLine(candidate)).toBe('among "melancholic" picks');
+  });
+
   it("formats the new method as '#N on the new-music chart'", () => {
     const candidate = baseCandidate({
       components: {
