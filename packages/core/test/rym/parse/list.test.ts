@@ -22,4 +22,10 @@ describe("parseListPage", () => {
     const result = parseListPage(fixture("list-top-releases.md"));
     expect(result.items).toHaveLength(1);
   });
+
+  it("unescapes a backslash-escaped underscore in the byline author (single-page list, no pagination override)", () => {
+    const md = "# A List\n\nA list by [No\\_Username]\n";
+    const result = parseListPage(md);
+    expect(result.author).toBe("No_Username");
+  });
 });

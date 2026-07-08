@@ -51,6 +51,7 @@ export type { FirecrawlScraperOptions, ScrapeBudget } from "./scrape/firecrawl.j
 export {
   replaceChartItems,
   replaceListItems,
+  stampAlbumGenreIfEmpty,
   upsertAlbum,
   upsertChart,
   upsertList,
@@ -78,6 +79,7 @@ export {
 export type {
   BuildAndPushPlaylistOptions,
   BuildAndPushPlaylistResult,
+  RollingPlaylistKey,
 } from "./spotify/playlist.js";
 export { pushDaily } from "./spotify/daily.js";
 

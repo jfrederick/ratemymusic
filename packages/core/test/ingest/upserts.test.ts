@@ -3,6 +3,7 @@ import { openDb } from "../../src/db.js";
 import {
   replaceChartItems,
   replaceListItems,
+  stampAlbumGenreIfEmpty,
   upsertAlbum,
   upsertChart,
   upsertList,
@@ -91,6 +92,44 @@ describe("upserts: albums", () => {
       genres: string;
     };
     expect(JSON.parse(row2.genres)).toEqual(["B"]);
+  });
+});
+
+describe("stampAlbumGenreIfEmpty", () => {
+  it("stamps a single-element genres array when the album currently has none", () => {
+    const db = openDb(":memory:");
+    const id = upsertAlbum(db, FOR_EMMA);
+    stampAlbumGenreIfEmpty(db, id, "Slowcore");
+    const row = db.prepare("SELECT genres FROM albums WHERE id = ?").get(id) as {
+      genres: string;
+    };
+    expect(JSON.parse(row.genres)).toEqual(["Slowcore"]);
+  });
+
+  it("does not overwrite an album that already has genres", () => {
+    const db = openDb(":memory:");
+    const id = upsertAlbum(db, { ...FOR_EMMA, genres: ["Indie Folk", "Singer-Songwriter"] });
+    stampAlbumGenreIfEmpty(db, id, "Slowcore");
+    const row = db.prepare("SELECT genres FROM albums WHERE id = ?").get(id) as {
+      genres: string;
+    };
+    expect(JSON.parse(row.genres)).toEqual(["Indie Folk", "Singer-Songwriter"]);
+  });
+
+  it("a later, richer upsertAlbum call still overwrites the stamp", () => {
+    const db = openDb(":memory:");
+    const id = upsertAlbum(db, FOR_EMMA);
+    stampAlbumGenreIfEmpty(db, id, "Slowcore");
+    upsertAlbum(db, { ...FOR_EMMA, genres: ["Indie Folk", "Singer-Songwriter"] });
+    const row = db.prepare("SELECT genres FROM albums WHERE id = ?").get(id) as {
+      genres: string;
+    };
+    expect(JSON.parse(row.genres)).toEqual(["Indie Folk", "Singer-Songwriter"]);
+  });
+
+  it("is a no-op for an unknown album id", () => {
+    const db = openDb(":memory:");
+    expect(() => stampAlbumGenreIfEmpty(db, 999999, "Slowcore")).not.toThrow();
   });
 });
 

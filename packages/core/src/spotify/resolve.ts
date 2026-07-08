@@ -27,8 +27,12 @@ export async function resolveAlbum(
     return result.id;
   }
 
+  // Dedupe by albumId: a repeatedly-unresolvable album (re-tried on every playlist build) would
+  // otherwise append a fresh entry every time, growing this list unboundedly. Keep only the most
+  // recent attempt per album.
   const existing = getSetting<UnresolvedEntry[]>(db, UNRESOLVED_KEY) ?? [];
+  const withoutAlbum = existing.filter((e) => e.albumId !== albumId);
   const entry: UnresolvedEntry = { albumId, at: new Date().toISOString() };
-  setSetting(db, UNRESOLVED_KEY, [...existing, entry]);
+  setSetting(db, UNRESOLVED_KEY, [...withoutAlbum, entry]);
   return null;
 }

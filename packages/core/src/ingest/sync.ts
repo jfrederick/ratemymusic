@@ -14,12 +14,14 @@ import {
   newMusicUrl,
 } from "../rym/urls.js";
 import { ScrapeBudgetError, ScrapeFailedError } from "../scrape/firecrawl.js";
+import { setSetting } from "../settings.js";
 import type { Scraper } from "../types.js";
 import { type QueueKind, enqueue, markDone, markFailed, nextPending } from "./frontier.js";
 import { TTL_DAYS } from "./ttl.js";
 import {
   replaceChartItems,
   replaceListItems,
+  stampAlbumGenreIfEmpty,
   upsertAlbum,
   upsertChart,
   upsertList,
@@ -264,7 +266,15 @@ function processGenrePage(db: DatabaseType, url: string, markdown: string): void
     params: { genre },
     scrapedAt,
   });
-  const albumIds = page.items.map((item) => upsertAlbum(db, item));
+  const albumIds = page.items.map((item) => {
+    const albumId = upsertAlbum(db, item);
+    // Most genre-chart candidates are never sighted on their own album page, so without this
+    // stamp their `genres` stays `[]` forever and genre filtering/discovery can never match
+    // them (see C1). Only applies when the album has no genres yet -- a richer album-page
+    // scrape (now or later) always wins.
+    stampAlbumGenreIfEmpty(db, albumId, genre);
+    return albumId;
+  });
   replaceChartItems(db, chartId, albumIds);
 }
 
@@ -390,11 +400,17 @@ export async function runSync(
     markDone(db, item.id);
   }
 
-  return {
+  const report: SyncReport = {
     pagesScraped,
     fromCache,
     parseFailures,
     budgetExhausted,
     counts: finalCounts(db),
   };
+  // Persisted here (rather than only by the server's POST /api/sync route) so every caller --
+  // the CLI (`npm run sync`, and the launchd/`daily` automation that runs it), the HTTP route,
+  // and any future caller -- keeps the dashboard's "last sync" summary fresh, not just requests
+  // made through the web UI.
+  setSetting(db, "last_sync_report", report);
+  return report;
 }

@@ -100,4 +100,23 @@ describe("resolveAlbum", () => {
     };
     expect(row.spotify_album_id).toBeNull();
   });
+
+  it("dedupes repeated unresolved attempts for the same album (M1) instead of growing unboundedly", async () => {
+    const db = openDb(":memory:");
+    const albumId = insertAlbum(db, {
+      rymUrl: "release/album/a/f/",
+      artist: "Artist",
+      title: "Title",
+    });
+    const searchAlbum = vi.fn(async () => null);
+    const sp = fakeSpotifyClient(searchAlbum);
+
+    await resolveAlbum(db, sp, albumId);
+    await resolveAlbum(db, sp, albumId);
+    await resolveAlbum(db, sp, albumId);
+
+    const unresolved = getSetting<{ albumId: number; at: string }[]>(db, "spotify_unresolved");
+    expect(unresolved).toHaveLength(1);
+    expect(unresolved?.[0]?.albumId).toBe(albumId);
+  });
 });
