@@ -1,4 +1,5 @@
 import { Sidebar } from "./components/Sidebar";
+import { Chat } from "./pages/Chat";
 import { Dashboard } from "./pages/Dashboard";
 import { Discover } from "./pages/Discover";
 import { Playlists } from "./pages/Playlists";
@@ -10,6 +11,8 @@ function RouteView({ route }: { route: ReturnType<typeof useHashRoute>[0] }) {
   switch (route) {
     case "/discover":
       return <Discover />;
+    case "/chat":
+      return <Chat />;
     case "/playlists":
       return <Playlists />;
     case "/settings":

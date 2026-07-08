@@ -18,6 +18,7 @@ import {
   type runSync,
 } from "@rmm/core";
 import { config as loadDotenv } from "dotenv";
+import { type AnthropicClient, createAnthropicClient } from "./chat/client.js";
 
 export type AppDeps = {
   db: DatabaseType;
@@ -36,6 +37,10 @@ export type AppDeps = {
   runDiscoveryFn?: typeof runDiscovery;
   pushDailyFn?: typeof pushDaily;
   buildAndPushPlaylistFn?: typeof buildAndPushPlaylist;
+  /** Chat config: the model to use is always known; the API key may be absent (chat disabled). */
+  anthropic: { apiKey: string | null; model: string };
+  /** Injectable Anthropic client, null when no API key is configured. Tests inject a fake. */
+  anthropicClient: AnthropicClient | null;
 };
 
 // This file lives at packages/server/src/deps.ts; walk up to the repo root.
@@ -77,5 +82,18 @@ export function buildDeps(env: NodeJS.ProcessEnv = process.env): AppDeps {
   // always construct it -- no need to gate on isConnected() here.
   const spotify = new SpotifyClient({ auth: spotifyAuth });
 
-  return { db, config, scraper, spotifyAuth, spotify, budget };
+  const anthropicClient = config.anthropicApiKey
+    ? createAnthropicClient(config.anthropicApiKey)
+    : null;
+
+  return {
+    db,
+    config,
+    scraper,
+    spotifyAuth,
+    spotify,
+    budget,
+    anthropic: { apiKey: config.anthropicApiKey, model: config.anthropicModel },
+    anthropicClient,
+  };
 }

@@ -3,6 +3,7 @@
 export type Config = {
   spotifyClientId: string;
   anthropicApiKey: string | null;
+  anthropicModel: string;
   firecrawlApiKey: string | null;
   budgetDaily: number;
   budgetInitial: number;
@@ -13,6 +14,7 @@ export type Config = {
 };
 
 const DEFAULT_SPOTIFY_CLIENT_ID = "40f98cc66e5b40e6a925dfa00e5bdbb1";
+const DEFAULT_ANTHROPIC_MODEL = "claude-opus-4-8";
 const DEFAULT_BUDGET_DAILY = 50;
 const DEFAULT_BUDGET_INITIAL = 400;
 const DEFAULT_PORT = 8787;
@@ -71,6 +73,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   return {
     spotifyClientId: readString(env, "SPOTIFY_CLIENT_ID") ?? DEFAULT_SPOTIFY_CLIENT_ID,
     anthropicApiKey: readString(env, "ANTHROPIC_API_KEY") ?? null,
+    anthropicModel: readString(env, "ANTHROPIC_MODEL") ?? DEFAULT_ANTHROPIC_MODEL,
     firecrawlApiKey: readString(env, "FIRECRAWL_API_KEY") ?? null,
     budgetDaily: readNumber(env, "BUDGET_DAILY", DEFAULT_BUDGET_DAILY),
     budgetInitial: readNumber(env, "BUDGET_INITIAL", DEFAULT_BUDGET_INITIAL),

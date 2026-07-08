@@ -95,6 +95,18 @@ export type PushDailyResult = {
   albums: number[];
 };
 
+export type ChatRole = "user" | "assistant";
+export type ChatMessage = { role: ChatRole; content: string };
+export type ChatToolEvent = { name: string; ok: boolean };
+export type ChatDoneResult = { text: string; toolEvents: ChatToolEvent[] };
+
+export type ChatStreamHandlers = {
+  onDelta?: (text: string) => void;
+  onTool?: (name: string) => void;
+  onDone?: (result: ChatDoneResult) => void;
+  onError?: (message: string) => void;
+};
+
 export type CandidateQuery = {
   status?: CandidateStatus;
   method?: MethodKey;
@@ -169,6 +181,82 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const text = await res.text();
   if (!text) return undefined as T;
   return JSON.parse(text) as T;
+}
+
+/** Parses one `event: X\ndata: Y\n\n` SSE frame and dispatches it to the matching handler. */
+function dispatchSseFrame(frame: string, handlers: ChatStreamHandlers): void {
+  let event = "message";
+  const dataLines: string[] = [];
+  for (const line of frame.split("\n")) {
+    if (line.startsWith("event: ")) event = line.slice("event: ".length);
+    else if (line.startsWith("data: ")) dataLines.push(line.slice("data: ".length));
+  }
+  if (dataLines.length === 0) return;
+
+  const parsed = JSON.parse(dataLines.join("\n")) as Record<string, unknown>;
+  switch (event) {
+    case "delta":
+      if (typeof parsed.text === "string") handlers.onDelta?.(parsed.text);
+      break;
+    case "tool":
+      if (typeof parsed.name === "string") handlers.onTool?.(parsed.name);
+      break;
+    case "done":
+      handlers.onDone?.(parsed as unknown as ChatDoneResult);
+      break;
+    case "error":
+      if (typeof parsed.message === "string") handlers.onError?.(parsed.message);
+      break;
+  }
+}
+
+/**
+ * POSTs a chat turn to /api/chat and parses the SSE response body as it streams in (via
+ * fetch + ReadableStream -- EventSource can't POST a body). Throws ApiError on a non-2xx
+ * response (e.g. 503 when chat isn't configured) before any streaming begins.
+ */
+export async function streamChat(
+  messages: ChatMessage[],
+  handlers: ChatStreamHandlers,
+): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages }),
+    });
+  } catch {
+    throw new ApiError("Could not reach the server. Check your connection.", 0);
+  }
+
+  if (!res.ok) {
+    let message = res.statusText || `Request failed (${res.status})`;
+    try {
+      const body = (await res.clone().json()) as Json;
+      if (body && typeof body.error === "string") message = body.error;
+    } catch {
+      // Non-JSON or empty error body; fall back to statusText.
+    }
+    throw new ApiError(message, res.status);
+  }
+
+  if (!res.body) return;
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let boundary = buffer.indexOf("\n\n");
+    while (boundary !== -1) {
+      dispatchSseFrame(buffer.slice(0, boundary), handlers);
+      buffer = buffer.slice(boundary + 2);
+      boundary = buffer.indexOf("\n\n");
+    }
+  }
+  if (buffer.trim()) dispatchSseFrame(buffer, handlers);
 }
 
 function toQueryString(query: CandidateQuery): string {

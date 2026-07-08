@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Route } from "../router";
 import {
+  IconChat,
   IconChevronsLeft,
   IconChevronsRight,
   IconCompass,
@@ -16,6 +17,7 @@ const NAV_ITEMS: {
 }[] = [
   { route: "/", label: "Dashboard", icon: IconGrid },
   { route: "/discover", label: "Discover", icon: IconCompass },
+  { route: "/chat", label: "Chat", icon: IconChat },
   { route: "/playlists", label: "Playlists", icon: IconList },
   { route: "/settings", label: "Settings", icon: IconGear },
 ];
