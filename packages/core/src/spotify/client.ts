@@ -238,6 +238,8 @@ export class SpotifyClient {
     title: string,
     artist: string,
   ): Promise<{ id: string; name: string; artistIds: string[] } | null> {
+    // Search `limit` max dropped to 10 (from 50) in Spotify's Feb 2026 Web API migration;
+    // 10 is also the most candidates we need to scan for a match, so no clamping required.
     const qs = new URLSearchParams({ q: query, type: "album", limit: "10" }).toString();
     const body = await this.requestJson<{ albums?: { items: SpotifyAlbumSearchItem[] } }>(
       `/search?${qs}`,
@@ -273,29 +275,30 @@ export class SpotifyClient {
     return results;
   }
 
+  // Spotify removed the batch GET /tracks?ids= endpoint (bare 403) in the Feb 2026 Web API
+  // migration; there's no batch replacement, so we fan out per-id GET /tracks/{id} requests
+  // through a small concurrency pool. Results preserve the input order.
   async tracksDetails(ids: string[]): Promise<{ id: string; name: string; popularity: number }[]> {
-    const results: { id: string; name: string; popularity: number }[] = [];
-    for (let i = 0; i < ids.length; i += 50) {
-      const chunk = ids.slice(i, i + 50);
-      const body = await this.requestJson<{ tracks: SpotifyTrackObject[] }>(
-        `/tracks?ids=${chunk.join(",")}`,
-      );
-      for (const track of body.tracks) {
-        if (track) {
-          results.push({ id: track.id, name: track.name, popularity: track.popularity });
+    const results: ({ id: string; name: string; popularity: number } | null)[] = new Array(
+      ids.length,
+    ).fill(null);
+    const concurrency = 4;
+    let cursor = 0;
+    const worker = async (): Promise<void> => {
+      while (cursor < ids.length) {
+        const i = cursor++;
+        try {
+          const track = await this.requestJson<SpotifyTrackObject>(`/tracks/${ids[i]}`);
+          results[i] = { id: track.id, name: track.name, popularity: track.popularity };
+        } catch (err) {
+          if (err instanceof SpotifyApiError && err.status === 404) continue;
+          throw err;
         }
       }
-    }
-    return results;
-  }
-
-  async artistTopTracks(
-    artistId: string,
-  ): Promise<{ id: string; name: string; popularity: number }[]> {
-    const body = await this.requestJson<{ tracks: SpotifyTrackObject[] }>(
-      `/artists/${artistId}/top-tracks?market=US`,
-    );
-    return body.tracks.map((t) => ({ id: t.id, name: t.name, popularity: t.popularity }));
+    };
+    const workers = Array.from({ length: Math.min(concurrency, ids.length) }, () => worker());
+    await Promise.all(workers);
+    return results.filter((r): r is { id: string; name: string; popularity: number } => r !== null);
   }
 
   async me(): Promise<{ id: string; displayName: string | null }> {
@@ -322,9 +325,12 @@ export class SpotifyClient {
     return { id: body.id };
   }
 
+  // Playlist item management moved from /playlists/{id}/tracks to /playlists/{id}/items in
+  // Spotify's Feb 2026 Web API migration (the old form returns a bare 403); request bodies
+  // (uris arrays) and the PUT+POST chunking scheme are unchanged.
   async replacePlaylistItems(playlistId: string, trackUris: string[]): Promise<void> {
     const first = trackUris.slice(0, 100);
-    await this.requestJson(`/playlists/${playlistId}/tracks`, {
+    await this.requestJson(`/playlists/${playlistId}/items`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ uris: first }),
@@ -332,7 +338,7 @@ export class SpotifyClient {
     const rest = trackUris.slice(100);
     for (let i = 0; i < rest.length; i += 100) {
       const chunk = rest.slice(i, i + 100);
-      await this.requestJson(`/playlists/${playlistId}/tracks`, {
+      await this.requestJson(`/playlists/${playlistId}/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uris: chunk }),
@@ -343,7 +349,7 @@ export class SpotifyClient {
   async addPlaylistItems(playlistId: string, trackUris: string[]): Promise<void> {
     for (let i = 0; i < trackUris.length; i += 100) {
       const chunk = trackUris.slice(i, i + 100);
-      await this.requestJson(`/playlists/${playlistId}/tracks`, {
+      await this.requestJson(`/playlists/${playlistId}/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uris: chunk }),

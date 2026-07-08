@@ -56,7 +56,6 @@ function fakeSp(o: {
     tracksDetails: vi.fn(async (ids: string[]) =>
       ids.map((id, i) => ({ id, name: `Track ${id}`, popularity: 100 - i })),
     ),
-    artistTopTracks: vi.fn(async () => []),
     me: vi.fn(async () => ({ id: "user-1", displayName: "Jim" })),
     createPlaylist: vi.fn(async () => ({ id: o.createPlaylistId ?? "playlist-created" })),
     replacePlaylistItems: vi.fn(async (id: string, uris: string[]) => {
@@ -199,7 +198,7 @@ describe("buildAndPushPlaylist", () => {
     expect(replaceCalls[0]).toHaveLength(150);
   });
 
-  it("passes the album's resolved spotify_artist_id to pickTracks in top mode", async () => {
+  it("builds a top-mode playlist from popularity-ranked album tracks (artistTopTracks removed Feb 2026)", async () => {
     const db = openDb(":memory:");
     const albumId = insertAlbum(db, {
       rymUrl: "release/album/f/1/",
@@ -209,16 +208,17 @@ describe("buildAndPushPlaylist", () => {
     insertCandidate(db, albumId, 0.9);
 
     const sp = fakeSp({ tracksPerAlbum: 3 });
-    await buildAndPushPlaylist(db, sp, {
+    const result = await buildAndPushPlaylist(db, sp, {
       name: "Top Mode",
       albumIds: [albumId],
       mode: "top",
     });
 
-    // fakeSp's searchAlbum resolves artistIds: ["artist-x"], which resolveAlbum
-    // should have persisted to albums.spotify_artist_id and buildAndPushPlaylist
-    // should read back and forward to pickTracks -> sp.artistTopTracks.
-    expect(sp.artistTopTracks).toHaveBeenCalledWith("artist-x");
+    // 'top' mode now degrades to sampler-style popularity ranking (default count 2) since
+    // Spotify removed GET /artists/{id}/top-tracks; no artist lookup or artist-scoped call
+    // is involved anymore.
+    expect(result.trackCount).toBe(2);
+    expect(sp.tracksDetails).toHaveBeenCalled();
   });
 
   it("replaces an existing playlist in place when replacePlaylistId is set", async () => {

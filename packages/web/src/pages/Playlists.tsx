@@ -21,7 +21,8 @@ const MODE_INFO: { value: PlaylistMode; label: string; description: string }[] =
   {
     value: "top",
     label: "top",
-    description: "Each artist's top tracks (regardless of album)",
+    description:
+      "Spotify removed the artist-top-tracks endpoint in Feb 2026, so this mode currently behaves like sampler (2 tracks per album)",
   },
   {
     value: "deep",

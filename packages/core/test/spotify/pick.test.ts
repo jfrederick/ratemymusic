@@ -4,14 +4,12 @@ import { pickTracks } from "../../src/spotify/pick.js";
 function fakeClient(o: {
   albumTracks: { id: string; name: string; discNumber: number; trackNumber: number }[];
   popularities: Record<string, number>;
-  topTracks?: { id: string; name: string; popularity: number }[];
 }) {
   return {
     albumTracks: vi.fn(async () => o.albumTracks),
     tracksDetails: vi.fn(async (ids: string[]) =>
       ids.map((id) => ({ id, name: `name-${id}`, popularity: o.popularities[id] ?? 0 })),
     ),
-    artistTopTracks: vi.fn(async () => o.topTracks ?? []),
   } as unknown as import("../../src/spotify/client.js").SpotifyClient;
 }
 
@@ -80,30 +78,27 @@ describe("pickTracks deep mode", () => {
   });
 });
 
-describe("pickTracks top mode", () => {
-  it("uses artistTopTracks when artistId is provided", async () => {
+// Spotify removed GET /artists/{id}/top-tracks (Feb 2026 migration), so 'top' mode now behaves
+// exactly like 'sampler' — popularity-ranked album tracks — just defaulting to 2 picks instead
+// of 1.
+describe("pickTracks top mode (degraded to sampler behavior post Feb 2026)", () => {
+  it("picks the top 2 most popular album tracks by default", async () => {
     const sp = fakeClient({
-      albumTracks: [],
-      popularities: {},
-      topTracks: [
-        { id: "x1", name: "Hit 1", popularity: 95 },
-        { id: "x2", name: "Hit 2", popularity: 85 },
-        { id: "x3", name: "Hit 3", popularity: 75 },
+      albumTracks: [
+        { id: "t1", name: "One", discNumber: 1, trackNumber: 1 },
+        { id: "t2", name: "Two", discNumber: 1, trackNumber: 2 },
+        { id: "t3", name: "Three", discNumber: 1, trackNumber: 3 },
       ],
+      popularities: { t1: 40, t2: 90, t3: 60 },
     });
-    const picks = await pickTracks(sp, {
-      spotifyAlbumId: "album-1",
-      mode: "top",
-      artistId: "artist-1",
-      albumDbId: 9,
-    });
+    const picks = await pickTracks(sp, { spotifyAlbumId: "album-1", mode: "top", albumDbId: 9 });
     expect(picks).toEqual([
-      { spotifyTrackId: "x1", name: "Hit 1", albumId: 9, popularity: 95 },
-      { spotifyTrackId: "x2", name: "Hit 2", albumId: 9, popularity: 85 },
+      { spotifyTrackId: "t2", name: "name-t2", albumId: 9, popularity: 90 },
+      { spotifyTrackId: "t3", name: "name-t3", albumId: 9, popularity: 60 },
     ]);
   });
 
-  it("falls back to sampler when artistId is absent", async () => {
+  it("respects a custom count, same as sampler", async () => {
     const sp = fakeClient({
       albumTracks: [
         { id: "t1", name: "One", discNumber: 1, trackNumber: 1 },
@@ -111,7 +106,12 @@ describe("pickTracks top mode", () => {
       ],
       popularities: { t1: 30, t2: 70 },
     });
-    const picks = await pickTracks(sp, { spotifyAlbumId: "album-1", mode: "top", albumDbId: 3 });
+    const picks = await pickTracks(sp, {
+      spotifyAlbumId: "album-1",
+      mode: "top",
+      count: 1,
+      albumDbId: 3,
+    });
     expect(picks).toEqual([{ spotifyTrackId: "t2", name: "name-t2", albumId: 3, popularity: 70 }]);
   });
 });

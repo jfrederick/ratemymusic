@@ -107,7 +107,11 @@ describe("Playlists", () => {
     renderPlaylists();
 
     await waitFor(() => screen.getByText("The most popular track from each recommended album"));
-    expect(screen.getByText("Each artist's top tracks (regardless of album)")).not.toBeNull();
+    expect(
+      screen.getByText(
+        "Spotify removed the artist-top-tracks endpoint in Feb 2026, so this mode currently behaves like sampler (2 tracks per album)",
+      ),
+    ).not.toBeNull();
     expect(screen.getByText("A deeper cut from each album — skips the hit")).not.toBeNull();
   });
 

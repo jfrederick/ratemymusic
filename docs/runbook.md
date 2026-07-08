@@ -141,6 +141,24 @@ button hits this) — it starts a fresh PKCE authorization-code flow and the
 callback at `/callback` persists new tokens to `oauth_tokens`, overwriting the
 stale ones. No app restart needed.
 
+### Feb 2026 Web API migration
+
+Spotify's February 2026 Web API migration removed several endpoints this app
+depended on: playlist item management moved from `/playlists/{id}/tracks` to
+`/playlists/{id}/items` (old form now bare-403s); the batch fetch endpoints
+`GET /tracks?ids=`, `GET /albums?ids=`, and `GET /artists?ids=` were removed
+with no batch replacement, so `SpotifyClient.tracksDetails` now fans out
+per-id `GET /tracks/{id}` requests through a small concurrency pool instead;
+`POST /users/{id}/playlists` was replaced by `POST /me/playlists`; search
+`limit` dropped to a max of 10; and `GET /artists/{id}/top-tracks` was removed
+outright with no replacement endpoint offered. That last removal means
+playlist mode `'top'` — previously "each artist's top tracks" — now degrades
+to the same popularity-ranked album-track picking as `'sampler'`, just
+defaulting to 2 tracks instead of 1 (see the comment on `pickTop` in
+`packages/core/src/spotify/pick.ts`). The mode is kept selectable in the API
+and UI (and the `playlists.mode` CHECK constraint still allows `'top'`)
+in case Spotify offers a replacement endpoint later.
+
 ## Resetting the database
 
 To start over:

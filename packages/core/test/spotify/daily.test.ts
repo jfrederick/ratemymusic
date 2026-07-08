@@ -34,7 +34,6 @@ function fakeSp(o: { getPlaylistResult?: { id: string; name: string } | null } =
     tracksDetails: vi.fn(async (ids: string[]) =>
       ids.map((id) => ({ id, name: id, popularity: 50 })),
     ),
-    artistTopTracks: vi.fn(async () => []),
     me: vi.fn(async () => ({ id: "user-1", displayName: "Jim" })),
     createPlaylist: vi.fn(async () => ({ id: "created-playlist-1" })),
     replacePlaylistItems: vi.fn(async () => {}),
