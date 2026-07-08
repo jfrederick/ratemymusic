@@ -203,6 +203,30 @@ Spotify iframe embed, actions add-to-queue / dismiss / already-know),
 **Chat**, **Settings** (key status, caps, cadence, mode toggle A/B/C).
 Spotify iframe embeds need no OAuth.
 
+## 3.9 Amendments from Phase 0 fixture harvest (2026-07-08)
+
+Validated against 12 real scrapes (fixtures in `packages/core/test/fixtures/`):
+
+- **Filtered chart URLs are unusable**: `charts/top/album/all-time/g:slowcore/`
+  renders the correct title but generic top-album items (client-side XHR
+  content never materializes for scrapers, even at 10 s waits). **Genre
+  mining therefore uses `/genre/<slug>/` pages**, which are server-rendered
+  with the genre's top ~15 albums. No positions/ratings there — order is the
+  signal.
+- **Descriptor method scrapes nothing**: descriptors are harvested from album
+  pages already in the graph; descriptor matching is a pure local query.
+  Chat-mode gap-fill scrapes genre pages, not descriptor charts.
+- **Pagination formats**: collections `/collection/<user>/r4.0/2`, lists
+  `/list/<user>/<slug>/2/`. Collections ~25 rows/page.
+- **Very long lists** (1000s of items) lazy-load and yield ~1 item per
+  scrape; parsers must tolerate this. Low-signal anyway (affinity is
+  normalized by list size).
+- **Empty collections render an empty table** (e.g. a user with no 5.0s) —
+  parsers return zero rows, not an error.
+- **New-music page** is server-rendered and rich (~40 albums w/ artist links).
+- Parser lineup is thus: `collection` (also used for twins), `album`, `list`,
+  `genrePage`, `newMusic`.
+
 ## 4. Error handling
 
 - **Scrape failures**: retry ×2 w/ backoff; park as `failed` after; never
