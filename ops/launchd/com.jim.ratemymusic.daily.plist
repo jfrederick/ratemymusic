@@ -31,6 +31,13 @@
   <key>StandardErrorPath</key>
   <string>/Users/jim/dev/jim/ratemymusic/data/logs/daily.err.log</string>
 
+  <!-- launchd's default PATH lacks the node/npm install dir; npm's shebang needs node on PATH. -->
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/Users/jim/.local/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+
   <key>RunAtLoad</key>
   <false/>
 </dict>
