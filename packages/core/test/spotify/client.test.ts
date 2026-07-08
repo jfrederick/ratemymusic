@@ -144,23 +144,63 @@ describe("SpotifyClient album/track reads", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
-  it("chunks tracksDetails requests by 50 ids", async () => {
-    const ids = Array.from({ length: 75 }, (_, i) => `id${i}`);
+  it("fetches tracksDetails per-id (batch /tracks?ids= was removed Feb 2026) and preserves input order", async () => {
+    const ids = Array.from({ length: 9 }, (_, i) => `id${i}`);
     const fetchImpl = vi.fn(async (url: string | URL) => {
       const u = new URL(String(url));
-      const idsParam = u.searchParams.get("ids") ?? "";
-      const requested = idsParam.split(",");
-      return jsonResponse({
-        tracks: requested.map((id) => ({ id, name: id, popularity: 10 })),
-      });
+      expect(u.pathname).toMatch(/^\/v1\/tracks\/id\d+$/);
+      const id = u.pathname.split("/").pop() as string;
+      return jsonResponse({ id, name: `name-${id}`, popularity: Number(id.replace("id", "")) });
     });
     const sp = new SpotifyClient({
       auth: fakeAuth(),
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
     const details = await sp.tracksDetails(ids);
-    expect(details).toHaveLength(75);
+    expect(fetchImpl).toHaveBeenCalledTimes(9);
+    expect(details.map((d) => d.id)).toEqual(ids);
+    expect(details).toEqual(
+      ids.map((id) => ({ id, name: `name-${id}`, popularity: Number(id.replace("id", "")) })),
+    );
+  });
+
+  it("caps tracksDetails concurrency at 4 in-flight requests", async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const ids = Array.from({ length: 10 }, (_, i) => `id${i}`);
+    const fetchImpl = vi.fn(async (url: string | URL) => {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      inFlight -= 1;
+      const id = String(url).split("/").pop() as string;
+      return jsonResponse({ id, name: id, popularity: 0 });
+    });
+    const sp = new SpotifyClient({
+      auth: fakeAuth(),
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    await sp.tracksDetails(ids);
+    expect(fetchImpl).toHaveBeenCalledTimes(10);
+    expect(maxInFlight).toBeLessThanOrEqual(4);
+    expect(maxInFlight).toBeGreaterThan(1);
+  });
+
+  it("retries a single track fetch on 429 via the existing backoff", async () => {
+    const sleep = vi.fn(async () => {});
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("", { status: 429, headers: { "Retry-After": "0" } }))
+      .mockResolvedValueOnce(jsonResponse({ id: "id0", name: "Track", popularity: 42 }));
+    const sp = new SpotifyClient({
+      auth: fakeAuth(),
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      sleep,
+    });
+    const details = await sp.tracksDetails(["id0"]);
+    expect(details).toEqual([{ id: "id0", name: "Track", popularity: 42 }]);
     expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(sleep).toHaveBeenCalledWith(0);
   });
 });
 
@@ -181,7 +221,7 @@ describe("SpotifyClient playlist writes", () => {
     expect(init?.method).toBe("POST");
   });
 
-  it("replacePlaylistItems PUTs the first 100 then POSTs the remainder in one more call", async () => {
+  it("replacePlaylistItems PUTs the first 100 then POSTs the remainder to /playlists/{id}/items", async () => {
     const fetchImpl = vi.fn(async (_url: string | URL, _init?: RequestInit) =>
       jsonResponse({ snapshot_id: "snap" }),
     );
@@ -192,15 +232,18 @@ describe("SpotifyClient playlist writes", () => {
     const uris = Array.from({ length: 150 }, (_, i) => `spotify:track:${i}`);
     await sp.replacePlaylistItems("playlist-1", uris);
     expect(fetchImpl).toHaveBeenCalledTimes(2);
-    const [, firstInit] = fetchImpl.mock.calls[0];
-    const [, secondInit] = fetchImpl.mock.calls[1];
+    const [firstUrl, firstInit] = fetchImpl.mock.calls[0];
+    const [secondUrl, secondInit] = fetchImpl.mock.calls[1];
+    expect(String(firstUrl)).toContain("/playlists/playlist-1/items");
+    expect(String(firstUrl)).not.toContain("/playlists/playlist-1/tracks");
+    expect(String(secondUrl)).toContain("/playlists/playlist-1/items");
     expect(firstInit?.method).toBe("PUT");
     expect(secondInit?.method).toBe("POST");
     expect(JSON.parse(String(firstInit?.body)).uris).toHaveLength(100);
     expect(JSON.parse(String(secondInit?.body)).uris).toHaveLength(50);
   });
 
-  it("addPlaylistItems chunks by 100 using POST", async () => {
+  it("addPlaylistItems chunks by 100 using POST to /playlists/{id}/items", async () => {
     const fetchImpl = vi.fn(async (_url: string | URL, _init?: RequestInit) =>
       jsonResponse({ snapshot_id: "snap" }),
     );
@@ -211,8 +254,9 @@ describe("SpotifyClient playlist writes", () => {
     const uris = Array.from({ length: 120 }, (_, i) => `spotify:track:${i}`);
     await sp.addPlaylistItems("playlist-1", uris);
     expect(fetchImpl).toHaveBeenCalledTimes(2);
-    for (const [, init] of fetchImpl.mock.calls) {
+    for (const [url, init] of fetchImpl.mock.calls) {
       expect(init?.method).toBe("POST");
+      expect(String(url)).toContain("/playlists/playlist-1/items");
     }
   });
 
@@ -238,24 +282,5 @@ describe("SpotifyClient playlist writes", () => {
   });
 });
 
-describe("SpotifyClient.artistTopTracks", () => {
-  it("returns mapped top tracks", async () => {
-    const fetchImpl = vi.fn(async () =>
-      jsonResponse({
-        tracks: [
-          { id: "t1", name: "Hit", popularity: 90 },
-          { id: "t2", name: "B-side", popularity: 40 },
-        ],
-      }),
-    );
-    const sp = new SpotifyClient({
-      auth: fakeAuth(),
-      fetchImpl: fetchImpl as unknown as typeof fetch,
-    });
-    const tracks = await sp.artistTopTracks("artist-1");
-    expect(tracks).toEqual([
-      { id: "t1", name: "Hit", popularity: 90 },
-      { id: "t2", name: "B-side", popularity: 40 },
-    ]);
-  });
-});
+// SpotifyClient.artistTopTracks was removed: GET /artists/{id}/top-tracks returns a bare 403
+// under Spotify's Feb 2026 Web API migration, with no replacement endpoint offered.

@@ -5,7 +5,6 @@ type PickOptions = {
   spotifyAlbumId: string;
   mode: TrackPickMode;
   count?: number;
-  artistId?: string;
   albumDbId: number;
 };
 
@@ -37,13 +36,15 @@ async function pickSampler(sp: SpotifyClient, o: PickOptions): Promise<PickedTra
   return toPicked(ranked.slice(0, count), o.albumDbId);
 }
 
+// Spotify removed GET /artists/{id}/top-tracks (bare 403) in the Feb 2026 Web API migration,
+// with no replacement endpoint. 'top' mode therefore degrades to the same popularity-ranked
+// album-track picking as 'sampler', just defaulting to 2 tracks instead of 1. The mode is kept
+// distinct (rather than folded into 'sampler') because TrackPickMode is a locked type with a
+// matching db CHECK constraint, and the API/UI must keep accepting 'top' as a selectable value.
 async function pickTop(sp: SpotifyClient, o: PickOptions): Promise<PickedTrack[]> {
-  if (!o.artistId) {
-    return pickSampler(sp, o);
-  }
   const count = o.count ?? 2;
-  const top = await sp.artistTopTracks(o.artistId);
-  return toPicked(top.slice(0, count), o.albumDbId);
+  const ranked = await popularityRanked(sp, o.spotifyAlbumId);
+  return toPicked(ranked.slice(0, count), o.albumDbId);
 }
 
 async function pickDeep(sp: SpotifyClient, o: PickOptions): Promise<PickedTrack[]> {

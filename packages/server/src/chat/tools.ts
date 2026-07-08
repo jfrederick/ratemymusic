@@ -415,7 +415,8 @@ export const TOOL_DEFINITIONS: Anthropic.Tool[] = [
         mode: {
           type: "string",
           enum: ["sampler", "top", "deep"],
-          description: "Track-picking mode; defaults to 'sampler'.",
+          description:
+            "Track-picking mode; defaults to 'sampler'. Note: 'top' currently behaves like 'sampler' (2 tracks per album) because Spotify removed the artist-top-tracks endpoint in Feb 2026.",
         },
       },
       required: ["name", "albumIds"],
