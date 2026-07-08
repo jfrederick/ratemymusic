@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+data/
+.firecrawl/
+*.tsbuildinfo
+.superpowers/
+.DS_Store
