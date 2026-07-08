@@ -104,12 +104,17 @@ export function twinMethod(db: DatabaseType): MethodResult {
   return result;
 }
 
-/** Scores candidates from `genre-page` charts by genre affinity (case-insensitive) x position decay. */
+/** Fold case and treat spaces/hyphens/underscores alike so profile name 'Indie Folk' matches chart slug 'indie-folk'. */
+function genreKey(g: string): string {
+  return g.toLowerCase().replace(/[\s_-]+/g, "-");
+}
+
+/** Scores candidates from `genre-page` charts by genre affinity (slug/name-folded) x position decay. */
 export function genreMethod(db: DatabaseType, profile: TasteProfile): MethodResult {
   const known = knownAlbumIds(db);
   const genreLookup = new Map<string, number>();
   for (const [genre, value] of Object.entries(profile.genres)) {
-    genreLookup.set(genre.toLowerCase(), value);
+    genreLookup.set(genreKey(genre), value);
   }
 
   const charts = db
@@ -122,7 +127,7 @@ export function genreMethod(db: DatabaseType, profile: TasteProfile): MethodResu
   for (const chart of charts) {
     const params = JSON.parse(chart.params) as { genre?: string };
     const genreName = params.genre ?? "";
-    const genreAffinity = genreLookup.get(genreName.toLowerCase()) ?? 0;
+    const genreAffinity = genreLookup.get(genreKey(genreName)) ?? 0;
     if (genreAffinity === 0) continue;
 
     const items = db
