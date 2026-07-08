@@ -1,4 +1,4 @@
-import { openDb } from "@rmm/core";
+import { openDb, setSetting } from "@rmm/core";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../src/app.js";
 import { buildTestDeps, fakeSpotifyAuth, seedAlbum, seedCandidate } from "./helpers.js";
@@ -38,7 +38,19 @@ describe("GET /api/status", () => {
       candidatesNew: 1,
     });
     expect(body.lastSync).toBeNull();
+    expect(body.lastCronError).toBeNull();
     expect(body.tasteProfileComputedAt).toBeNull();
+  });
+
+  it("exposes the last_cron_error setting when present (M2)", async () => {
+    const db = openDb(":memory:");
+    const cronError = { step: "sync", message: "budget exhausted", at: "2026-07-08T07:00:00.000Z" };
+    setSetting(db, "last_cron_error", cronError);
+    const deps = buildTestDeps({ db, spotifyAuth: fakeSpotifyAuth(false) });
+    const app = createApp(deps);
+    const res = await app.request("/api/status");
+    const body = await res.json();
+    expect(body.lastCronError).toEqual(cronError);
   });
 
   it("reflects spotify connected true and budget spend", async () => {

@@ -12,8 +12,10 @@ import {
   getSetting,
   loadTasteProfile,
   pushDaily,
+  rollingPlaylistId,
   runDiscovery,
   runSync,
+  setRollingPlaylistId,
   setSetting,
 } from "@rmm/core";
 import { Hono } from "hono";
@@ -48,6 +50,32 @@ export type CandidateView = Omit<CandidateRow, "components" | "genres" | "descri
   genres: string[];
   descriptors: string[];
 };
+
+/** True when `raw` is either absent or parses as a finite number (rejects "", "abc", "NaN", etc). */
+function isValidNumericParam(raw: string | undefined): boolean {
+  if (raw === undefined) return true;
+  if (raw.trim() === "") return false;
+  return Number.isFinite(Number(raw));
+}
+
+/**
+ * A candidate matches a genre query if either its album's own `genres` array has an exact
+ * (case-insensitive) match (the common case: album-page-scraped albums), OR -- since most
+ * genre-chart candidates never get their own album-page scrape and so never carry album-level
+ * genres at all (C1) -- one of its `genre` scoring component's chart entries names a matching
+ * genre (case-insensitive substring, since chart genre names/slugs don't always match the
+ * album-page genre vocabulary exactly).
+ */
+function matchesGenre(item: CandidateView, needle: string): boolean {
+  if (item.genres.some((g) => g.toLowerCase() === needle)) return true;
+  const genreComponent = item.components.genre;
+  if (genreComponent && genreComponent.evidence.method === "genre") {
+    return genreComponent.evidence.charts.some((chart) =>
+      chart.genre.toLowerCase().includes(needle),
+    );
+  }
+  return false;
+}
 
 function countRows(db: DatabaseType, table: string, where?: string): number {
   const sql = where
@@ -96,6 +124,7 @@ export function createApp(deps: AppDeps): Hono {
         candidatesNew: countRows(deps.db, "candidates", "status = 'new'"),
       },
       lastSync: getSetting(deps.db, "last_sync_report"),
+      lastCronError: getSetting(deps.db, "last_cron_error"),
       tasteProfileComputedAt: profile?.computedAt ?? null,
     });
   });
@@ -111,9 +140,16 @@ export function createApp(deps: AppDeps): Hono {
     const method = c.req.query("method");
     const genre = c.req.query("genre");
     const minScoreParam = c.req.query("minScore");
-    const minScore = minScoreParam !== undefined ? Number(minScoreParam) : undefined;
     const limitParam = c.req.query("limit");
     const offsetParam = c.req.query("offset");
+    if (
+      !isValidNumericParam(minScoreParam) ||
+      !isValidNumericParam(limitParam) ||
+      !isValidNumericParam(offsetParam)
+    ) {
+      return c.json({ error: "invalid query parameter" }, 400);
+    }
+    const minScore = minScoreParam !== undefined ? Number(minScoreParam) : undefined;
     const limit = limitParam !== undefined ? Number(limitParam) : 50;
     const offset = offsetParam !== undefined ? Number(offsetParam) : 0;
 
@@ -148,7 +184,7 @@ export function createApp(deps: AppDeps): Hono {
     }
     if (genre) {
       const needle = genre.toLowerCase();
-      items = items.filter((item) => item.genres.some((g) => g.toLowerCase() === needle));
+      items = items.filter((item) => matchesGenre(item, needle));
     }
 
     const total = items.length;
@@ -237,6 +273,76 @@ export function createApp(deps: AppDeps): Hono {
       )
       .all();
     return c.json(rows);
+  });
+
+  app.get("/api/playlists/:id/tracks", (c) => {
+    const id = Number(c.req.param("id"));
+    const playlist = deps.db.prepare("SELECT id FROM playlists WHERE id = ?").get(id);
+    if (!playlist) return c.json({ error: "playlist not found" }, 404);
+    const rows = deps.db
+      .prepare(
+        `SELECT pt.position AS position, pt.spotify_track_id AS spotifyTrackId,
+                pt.album_id AS albumId, pt.kept AS kept,
+                a.artist AS artist, a.title AS title
+         FROM playlist_tracks pt
+         LEFT JOIN albums a ON a.id = pt.album_id
+         WHERE pt.playlist_id = ?
+         ORDER BY pt.position`,
+      )
+      .all(id) as {
+      position: number;
+      spotifyTrackId: string;
+      albumId: number | null;
+      kept: number;
+      artist: string | null;
+      title: string | null;
+    }[];
+    return c.json(rows.map((row) => ({ ...row, kept: row.kept === 1 })));
+  });
+
+  const KEEPERS_PLAYLIST_NAME = "RYM Keepers";
+
+  app.post("/api/playlists/tracks/keep", async (c) => {
+    if (!deps.spotifyAuth.isConnected() || !deps.spotify) {
+      return c.json({ error: "spotify not connected" }, 409);
+    }
+    const body = (await c.req.json().catch(() => ({}))) as {
+      spotifyTrackId?: string;
+      albumId?: number;
+    };
+    if (!body.spotifyTrackId) {
+      return c.json({ error: "spotifyTrackId is required" }, 400);
+    }
+
+    let playlistId = rollingPlaylistId(deps.db, "keepers");
+    if (playlistId) {
+      const existing = await deps.spotify.getPlaylist(playlistId);
+      if (!existing) playlistId = null;
+    }
+    if (!playlistId) {
+      const me = await deps.spotify.me();
+      const created = await deps.spotify.createPlaylist(me.id, {
+        name: KEEPERS_PLAYLIST_NAME,
+        description: "Tracks kept from ratemymusic-built playlists.",
+        public: false,
+      });
+      playlistId = created.id;
+      setRollingPlaylistId(deps.db, "keepers", playlistId);
+    }
+
+    await deps.spotify.addPlaylistItems(playlistId, [`spotify:track:${body.spotifyTrackId}`]);
+
+    if (body.albumId !== undefined) {
+      deps.db
+        .prepare("UPDATE playlist_tracks SET kept = 1 WHERE spotify_track_id = ? AND album_id = ?")
+        .run(body.spotifyTrackId, body.albumId);
+    } else {
+      deps.db
+        .prepare("UPDATE playlist_tracks SET kept = 1 WHERE spotify_track_id = ?")
+        .run(body.spotifyTrackId);
+    }
+
+    return c.json({ ok: true, playlistId });
   });
 
   app.post("/api/playlists/daily", async (c) => {

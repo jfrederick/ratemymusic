@@ -103,6 +103,35 @@ describe("search_candidates", () => {
     ]);
   });
 
+  it("matches via genre-method evidence when album.genres is empty (C1)", async () => {
+    const db = openDb(":memory:");
+    const evidenceOnly = seedAlbum(db, {
+      rymUrl: "/release/evidence-only/",
+      artist: "Chart Only Artist",
+      title: "Chart Only Album",
+      genres: [],
+    });
+    seedCandidate(db, {
+      albumId: evidenceOnly,
+      score: 0.6,
+      components: {
+        genre: {
+          score: 0.6,
+          evidence: {
+            method: "genre",
+            charts: [{ rymUrl: "/genre/slowcore/", genre: "Slowcore", position: 2 }],
+          },
+        },
+      },
+    });
+    const deps = buildTestDeps({ db });
+
+    const result = await TOOL_EXECUTORS.search_candidates(deps, { genres: ["slowcore"] });
+    if (!result.ok) throw new Error("unreachable");
+    const artists = (result.data as { artist: string }[]).map((r) => r.artist);
+    expect(artists).toEqual(["Chart Only Artist"]);
+  });
+
   it("is case-insensitive substring matching", async () => {
     const db = openDb(":memory:");
     seed(db);
@@ -174,6 +203,29 @@ describe("search_candidates", () => {
     if (!result.ok) throw new Error("unreachable");
     const data = result.data as { why: string }[];
     expect(data[0].why).toBe("#3 in Slowcore");
+  });
+
+  it("omits the position when descriptor evidence's position is 0 (M3)", async () => {
+    const db = openDb(":memory:");
+    const id = seedAlbum(db, { rymUrl: "/release/y/", artist: "B", title: "U", year: 2001 });
+    seedCandidate(db, {
+      albumId: id,
+      score: 0.5,
+      components: {
+        descriptor: {
+          score: 0.5,
+          evidence: {
+            method: "descriptor",
+            charts: [{ rymUrl: "", descriptor: "melancholic", position: 0 }],
+          },
+        },
+      },
+    });
+    const deps = buildTestDeps({ db });
+    const result = await TOOL_EXECUTORS.search_candidates(deps, {});
+    if (!result.ok) throw new Error("unreachable");
+    const data = result.data as { why: string }[];
+    expect(data[0].why).toBe('among "melancholic" picks');
   });
 });
 
