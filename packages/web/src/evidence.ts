@@ -33,7 +33,11 @@ function formatDescriptor(evidence: EvidenceOf<"descriptor">): string {
   const charts = evidence.charts;
   if (charts.length === 0) return "";
   const top = [...charts].sort((a, b) => a.position - b.position)[0];
-  return `#${top.position} among "${top.descriptor}" picks`;
+  // Descriptor evidence has no real chart rank (position is always the literal placeholder 0 --
+  // see discovery/methods.ts's descriptorMethod), so showing "#0" would be misleading.
+  return top.position === 0
+    ? `among "${top.descriptor}" picks`
+    : `#${top.position} among "${top.descriptor}" picks`;
 }
 
 function formatNew(evidence: EvidenceOf<"new">): string {

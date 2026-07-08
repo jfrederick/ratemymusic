@@ -3,6 +3,7 @@ import { BudgetLedger } from "../../src/budget.js";
 import { openDb } from "../../src/db.js";
 import { runSync } from "../../src/ingest/sync.js";
 import { collectionUrl } from "../../src/rym/urls.js";
+import { getSetting } from "../../src/settings.js";
 import { FakeScraper, fixture } from "./fakeScraper.js";
 
 const RYM_USERNAME = "jimbof36";
@@ -148,6 +149,88 @@ describe("runSync: happy path", () => {
       .prepare("SELECT COUNT(*) AS c FROM scrape_queue WHERE kind = 'album'")
       .get() as { c: number };
     expect(albumQueueItems.c).toBe(0);
+  });
+});
+
+describe("runSync: genre-page genre stamping (C1)", () => {
+  it("stamps the chart's genre onto albums that only appear via the genre-page scrape", async () => {
+    const db = openDb(":memory:");
+    const scraper = new FakeScraper({
+      // Souvlaki's real genres (Dream Pop/Shoegaze/Space Rock Revival) give seedGenresAndNewMusic
+      // something to enqueue a genre page for -- every /genre/ url resolves to the same
+      // genre-slowcore.md fixture regardless of which genre it's actually for (only the parsed
+      // heading/url slug matters here, not which genre it nominally represents).
+      urls: {
+        [collectionUrl(RYM_USERNAME, "5.0")]: fixture("collection-r5.0.md"),
+        "/release/album/slowdive/souvlaki/": fixture("album-souvlaki.md"),
+        "/new-music/": fixture("new-music.md"),
+      },
+      fallbacks: [
+        { test: (u: string) => u.startsWith("/collection/"), markdown: EMPTY_COLLECTION_MD },
+        { test: (u: string) => u.startsWith("/list/"), markdown: EMPTY_LIST_MD },
+        {
+          test: (u: string) => u.startsWith("/release/"),
+          markdown: "By [Someone](https://rateyourmusic.com/artist/someone)\n",
+        },
+        { test: (u: string) => u.startsWith("/genre/"), markdown: fixture("genre-slowcore.md") },
+      ],
+    });
+
+    await runSync(db, scraper, { rymUsername: RYM_USERNAME });
+
+    const charts = db.prepare("SELECT id, params FROM charts WHERE kind = 'genre-page'").all() as {
+      id: number;
+      params: string;
+    }[];
+    expect(charts.length).toBeGreaterThan(0);
+    const chartGenreById = new Map(
+      charts.map((c) => [c.id, (JSON.parse(c.params) as { genre: string }).genre]),
+    );
+
+    const placeholders = charts.map(() => "?").join(",");
+    const rows = db
+      .prepare(
+        `SELECT ci.chart_id AS chartId, ci.album_id AS albumId, a.genres AS genres
+         FROM chart_items ci
+         JOIN albums a ON a.id = ci.album_id
+         WHERE ci.chart_id IN (${placeholders})`,
+      )
+      .all(...charts.map((c) => c.id)) as { chartId: number; albumId: number; genres: string }[];
+    expect(rows.length).toBeGreaterThan(0);
+
+    const chartIdsByAlbum = new Map<number, number[]>();
+    const genresByAlbum = new Map<number, string[]>();
+    for (const row of rows) {
+      genresByAlbum.set(row.albumId, JSON.parse(row.genres));
+      const ids = chartIdsByAlbum.get(row.albumId) ?? [];
+      ids.push(row.chartId);
+      chartIdsByAlbum.set(row.albumId, ids);
+    }
+
+    // Every album sighted only via a genre chart (never its own album page, per the frugal
+    // fallback above) picked up exactly one genre -- the name of one of the chart(s) it's
+    // charted on -- instead of staying stuck at `genres: []`.
+    for (const [albumId, genres] of genresByAlbum) {
+      expect(genres).toHaveLength(1);
+      const candidateGenres = (chartIdsByAlbum.get(albumId) ?? []).map((id) =>
+        chartGenreById.get(id),
+      );
+      expect(candidateGenres).toContain(genres[0]);
+    }
+  });
+});
+
+describe("runSync: last_sync_report persistence (M2)", () => {
+  it("persists the report to the last_sync_report setting so CLI-only callers (no HTTP route) still surface it", async () => {
+    const db = openDb(":memory:");
+    const scraper = new FakeScraper({
+      urls: { [collectionUrl(RYM_USERNAME, "5.0")]: fixture("collection-r5.0.md") },
+      fallbacks: [{ test: () => true, markdown: EMPTY_COLLECTION_MD }],
+    });
+
+    const report = await runSync(db, scraper, { rymUsername: RYM_USERNAME, maxPages: 1 });
+
+    expect(getSetting(db, "last_sync_report")).toEqual(report);
   });
 });
 

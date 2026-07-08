@@ -226,3 +226,26 @@ export function replaceChartItems(db: DatabaseType, chartId: number, albumIds: n
   });
   tx(albumIds);
 }
+
+/**
+ * Stamps `genre` onto an album's `genres` array, but ONLY when it's currently empty. Used when
+ * ingesting a genre-chart page: most candidates are only ever sighted via a genre-page scrape
+ * (never their own album page), so without this stamp their `genres` column stays `[]` forever
+ * and genre-based filtering/discovery can never match them.
+ *
+ * Deliberately bypasses `upsertAlbum`'s "overwrite genres when incoming is non-empty" rule: that
+ * rule has no "existing is empty" guard, so routing a single-genre stamp through `upsertAlbum`
+ * would let it clobber a richer genre list from an earlier album-page scrape. Checking
+ * "currently empty" here instead means a later, richer album-page `upsertAlbum` call still wins
+ * (it overwrites unconditionally when non-empty), while this stamp never overwrites richer data.
+ */
+export function stampAlbumGenreIfEmpty(db: DatabaseType, albumId: number, genre: string): void {
+  if (!genre) return;
+  const row = db.prepare("SELECT genres FROM albums WHERE id = ?").get(albumId) as
+    | { genres: string }
+    | undefined;
+  if (!row) return;
+  const genres = JSON.parse(row.genres) as string[];
+  if (genres.length > 0) return;
+  db.prepare("UPDATE albums SET genres = ? WHERE id = ?").run(JSON.stringify([genre]), albumId);
+}

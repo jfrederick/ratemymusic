@@ -31,19 +31,41 @@ const PLAIN_LINK = String.raw`\[(${TEXT_BODY})\]\((${HREF})(?:\s+"(${TITLE_BODY}
 
 const LINK_RE = new RegExp(`${WRAPPED_IMAGE_LINK}|${STANDALONE_IMAGE}|${PLAIN_LINK}`, "g");
 
+/**
+ * Un-escapes markdown backslash-escapes (`\X` -> `X`). RYM's markdown escapes characters like
+ * `[`, `]`, and `_` inside titles/usernames so they don't get misparsed as markdown syntax (e.g.
+ * `Depressive Silence \[II\]`, `No\_Username`) -- left un-escaped, these literal backslashes leak
+ * into stored artist/title/username values.
+ */
+export function unescapeMarkdown(s: string): string {
+  return s.replace(/\\(.)/g, "$1");
+}
+
 /** Extracts every markdown link (plain, image, and image-wrapped-in-link) in document order. */
 export function extractLinks(md: string): MdLink[] {
   const out: MdLink[] = [];
   for (const m of md.matchAll(LINK_RE)) {
     if (m[3] !== undefined) {
-      out.push({ text: m[1], href: m[3], title: m[4] ?? null, isImage: true, index: m.index });
+      out.push({
+        text: unescapeMarkdown(m[1]),
+        href: m[3],
+        title: m[4] !== undefined ? unescapeMarkdown(m[4]) : null,
+        isImage: true,
+        index: m.index,
+      });
     } else if (m[6] !== undefined) {
-      out.push({ text: m[5], href: m[6], title: null, isImage: true, index: m.index });
+      out.push({
+        text: unescapeMarkdown(m[5]),
+        href: m[6],
+        title: null,
+        isImage: true,
+        index: m.index,
+      });
     } else {
       out.push({
-        text: m[7] ?? "",
+        text: unescapeMarkdown(m[7] ?? ""),
         href: m[8] ?? "",
-        title: m[9] ?? null,
+        title: m[9] !== undefined ? unescapeMarkdown(m[9]) : null,
         isImage: false,
         index: m.index,
       });

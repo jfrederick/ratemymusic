@@ -89,6 +89,56 @@ describe("GET /api/candidates", () => {
     expect(body.items[0].artist).toBe("Artist High");
   });
 
+  it("filters by genre via genre-method evidence when album.genres is empty (C1)", async () => {
+    const db = openDb(":memory:");
+    // A typical genre-chart-only candidate: never sighted on its own album page, so it carries
+    // no album-level genres at all -- the only signal is the genre scoring component's evidence.
+    const evidenceOnly = seedAlbum(db, {
+      rymUrl: "/release/evidence-only/",
+      artist: "Chart Only Artist",
+      title: "Chart Only Album",
+      genres: [],
+    });
+    seedCandidate(db, {
+      albumId: evidenceOnly,
+      score: 0.6,
+      status: "new",
+      components: {
+        genre: {
+          score: 0.6,
+          evidence: {
+            method: "genre",
+            charts: [{ rymUrl: "/genre/slowcore/", genre: "Slowcore", position: 2 }],
+          },
+        },
+      },
+    });
+    const app = createApp(buildTestDeps({ db }));
+
+    const res = await app.request("/api/candidates?genre=slowcore");
+    const body = await res.json();
+    expect(body.total).toBe(1);
+    expect(body.items[0].artist).toBe("Chart Only Artist");
+  });
+
+  it("400s on a non-numeric limit/offset/minScore", async () => {
+    const db = openDb(":memory:");
+    seedThree(db);
+    const app = createApp(buildTestDeps({ db }));
+
+    const limitRes = await app.request("/api/candidates?limit=abc");
+    expect(limitRes.status).toBe(400);
+    expect(await limitRes.json()).toEqual({ error: "invalid query parameter" });
+
+    const offsetRes = await app.request("/api/candidates?offset=xyz");
+    expect(offsetRes.status).toBe(400);
+    expect(await offsetRes.json()).toEqual({ error: "invalid query parameter" });
+
+    const minScoreRes = await app.request("/api/candidates?minScore=notanumber");
+    expect(minScoreRes.status).toBe(400);
+    expect(await minScoreRes.json()).toEqual({ error: "invalid query parameter" });
+  });
+
   it("filters by minScore", async () => {
     const db = openDb(":memory:");
     seedThree(db);

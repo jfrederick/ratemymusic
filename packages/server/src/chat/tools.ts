@@ -12,6 +12,7 @@ import {
   parseGenrePage,
   replaceChartItems,
   runDiscovery,
+  stampAlbumGenreIfEmpty,
   upsertAlbum,
   upsertChart,
 } from "@rmm/core";
@@ -144,7 +145,11 @@ function describeEvidence(evidence: Evidence): string {
     case "descriptor": {
       if (evidence.charts.length === 0) return "";
       const top = [...evidence.charts].sort((a, b) => a.position - b.position)[0];
-      return `#${top.position} among "${top.descriptor}" picks`;
+      // Descriptor evidence has no real chart rank (position is always the literal placeholder
+      // 0 -- see discovery/methods.ts's descriptorMethod), so showing "#0" would be misleading.
+      return top.position === 0
+        ? `among "${top.descriptor}" picks`
+        : `#${top.position} among "${top.descriptor}" picks`;
     }
     case "new": {
       if (evidence.charts.length === 0) return "";
@@ -204,10 +209,22 @@ async function searchCandidatesExecutor(deps: AppDeps, rawInput: unknown): Promi
 
     const genres = JSON.parse(row.genres) as string[];
     const descriptors = JSON.parse(row.descriptors) as string[];
+    const components = JSON.parse(row.components) as Candidate["components"];
 
     if (genreNeedles.length > 0) {
-      const matches = genres.some((g) => genreNeedles.some((n) => g.toLowerCase().includes(n)));
-      if (!matches) continue;
+      const albumGenreMatch = genres.some((g) =>
+        genreNeedles.some((n) => g.toLowerCase().includes(n)),
+      );
+      // Most genre-chart candidates never get their own album-page scrape and so never carry
+      // album-level genres at all (C1) -- fall back to the genre scoring component's chart
+      // evidence, which is how they were actually surfaced.
+      const genreComponent = components.genre;
+      const evidenceGenreMatch =
+        genreComponent?.evidence.method === "genre" &&
+        genreComponent.evidence.charts.some((chart) =>
+          genreNeedles.some((n) => chart.genre.toLowerCase().includes(n)),
+        );
+      if (!albumGenreMatch && !evidenceGenreMatch) continue;
     }
     if (descriptorNeedles.length > 0) {
       const matches = descriptors.some((d) =>
@@ -218,7 +235,6 @@ async function searchCandidatesExecutor(deps: AppDeps, rawInput: unknown): Promi
 
     if (knownArtists?.has(row.artist.toLowerCase())) continue;
 
-    const components = JSON.parse(row.components) as Candidate["components"];
     results.push({
       albumId: row.albumId,
       artist: row.artist,
@@ -281,7 +297,11 @@ async function scrapeGenrePageExecutor(deps: AppDeps, rawInput: unknown): Promis
     params: { genre: chartGenre },
     scrapedAt,
   });
-  const albumIds = page.items.map((item) => upsertAlbum(deps.db, item));
+  const albumIds = page.items.map((item) => {
+    const albumId = upsertAlbum(deps.db, item);
+    stampAlbumGenreIfEmpty(deps.db, albumId, chartGenre);
+    return albumId;
+  });
   replaceChartItems(deps.db, chartId, albumIds);
 
   const runDiscoveryFn = deps.runDiscoveryFn ?? runDiscovery;

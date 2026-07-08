@@ -1,6 +1,6 @@
 import type { AlbumRef } from "../../types.js";
 import { ParseError } from "./errors.js";
-import { extractNextPageUrl, extractReleaseItems } from "./markdown.js";
+import { extractNextPageUrl, extractReleaseItems, unescapeMarkdown } from "./markdown.js";
 
 export type ListPage = {
   title: string;
@@ -31,7 +31,7 @@ export function parseListPage(md: string): ListPage {
   // shows an unrelated username while the pagination links correctly point
   // at the real list owner) -- prefer the pagination link's user segment
   // when available, falling back to the byline text for single-page lists.
-  let author = listByMatch ? listByMatch[1] : "";
+  let author = listByMatch ? unescapeMarkdown(listByMatch[1]) : "";
   const fromPagination = nextPageUrl?.match(LIST_PATH_USER_RE);
   if (fromPagination) {
     author = fromPagination[1];

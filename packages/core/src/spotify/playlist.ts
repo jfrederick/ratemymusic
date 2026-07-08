@@ -103,10 +103,12 @@ export async function buildAndPushPlaylist(
   return { spotifyPlaylistId, trackCount: uniqueTracks.length, unresolved };
 }
 
-export function rollingPlaylistId(db: DatabaseType, key: "daily"): string | null {
+export type RollingPlaylistKey = "daily" | "keepers";
+
+export function rollingPlaylistId(db: DatabaseType, key: RollingPlaylistKey): string | null {
   return getSetting<string>(db, `rolling_playlist_${key}`);
 }
 
-export function setRollingPlaylistId(db: DatabaseType, key: "daily", id: string): void {
+export function setRollingPlaylistId(db: DatabaseType, key: RollingPlaylistKey, id: string): void {
   setSetting(db, `rolling_playlist_${key}`, id);
 }

@@ -3,6 +3,7 @@ import {
   type CandidateView,
   type PlaylistMode,
   type PlaylistSummary,
+  type PlaylistTrackView,
   api,
   describeError,
   isDisconnectedError,
@@ -12,9 +13,21 @@ import { Skeleton } from "../components/Skeleton";
 import { useToast } from "../toast";
 
 const MODE_INFO: { value: PlaylistMode; label: string; description: string }[] = [
-  { value: "sampler", label: "sampler", description: "A broad taste of many artists and styles." },
-  { value: "top", label: "top", description: "Only the highest-scored candidates, no filler." },
-  { value: "deep", label: "deep", description: "Fewer artists, deeper cuts from each one." },
+  {
+    value: "sampler",
+    label: "sampler",
+    description: "The most popular track from each recommended album",
+  },
+  {
+    value: "top",
+    label: "top",
+    description: "Each artist's top tracks (regardless of album)",
+  },
+  {
+    value: "deep",
+    label: "deep",
+    description: "A deeper cut from each album — skips the hit",
+  },
 ];
 
 function defaultPlaylistName(): string {
@@ -39,6 +52,10 @@ export function Playlists() {
   const [history, setHistory] = useState<PlaylistSummary[] | null>(null);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [lastCreated, setLastCreated] = useState<string | null>(null);
+  const [tracksByPlaylist, setTracksByPlaylist] = useState<Map<number, PlaylistTrackView[]>>(
+    new Map(),
+  );
+  const [keepingTrackId, setKeepingTrackId] = useState<string | null>(null);
 
   useEffect(() => {
     api
@@ -79,10 +96,21 @@ export function Playlists() {
     setCreating(true);
     setDisconnected(false);
     try {
-      const result = await api.createPlaylist({ name, mode, albumIds: queue });
+      // Deliberately omit albumIds: sending it explicitly (even as a copy of the queue) would
+      // stop the server from recognizing this as "build from the queue" and clearing it
+      // server-side afterwards, leaving the queue stuck forever (I3).
+      const result = await api.createPlaylist({ name, mode });
       setLastCreated(result.spotifyPlaylistId);
       push(`Created "${name}" with ${result.trackCount} tracks.`, "success");
+      if (result.unresolved.length > 0) {
+        const n = result.unresolved.length;
+        push(`${n} album${n === 1 ? "" : "s"} had no Spotify match.`, "error");
+      }
       refreshHistory();
+      // The server clears its queue as part of a successful build-from-queue; refresh our local
+      // copy so the UI reflects that instead of re-showing already-playlisted albums.
+      const freshQueue = await api.getQueue().catch(() => []);
+      setQueue(freshQueue);
     } catch (err) {
       if (isDisconnectedError(err)) {
         setDisconnected(true);
@@ -119,6 +147,44 @@ export function Playlists() {
       else next.add(id);
       return next;
     });
+    if (!tracksByPlaylist.has(id)) {
+      api
+        .getPlaylistTracks(id)
+        .then((tracks) => setTracksByPlaylist((current) => new Map(current).set(id, tracks)))
+        .catch((err) => push(describeError(err), "error"));
+    }
+  };
+
+  const keepTrack = async (playlistId: number, track: PlaylistTrackView) => {
+    setKeepingTrackId(track.spotifyTrackId);
+    try {
+      await api.keepTrack({
+        spotifyTrackId: track.spotifyTrackId,
+        albumId: track.albumId ?? undefined,
+      });
+      setTracksByPlaylist((current) => {
+        const next = new Map(current);
+        const tracks = next.get(playlistId);
+        if (tracks) {
+          next.set(
+            playlistId,
+            tracks.map((t) =>
+              t.spotifyTrackId === track.spotifyTrackId ? { ...t, kept: true } : t,
+            ),
+          );
+        }
+        return next;
+      });
+      push("Kept.", "success");
+    } catch (err) {
+      if (isDisconnectedError(err)) {
+        setDisconnected(true);
+      } else {
+        push(describeError(err), "error");
+      }
+    } finally {
+      setKeepingTrackId(null);
+    }
   };
 
   return (
@@ -259,14 +325,47 @@ export function Playlists() {
                   </div>
                 </div>
                 {expanded.has(playlist.id) && (
-                  <iframe
-                    title={`Preview of ${playlist.name}`}
-                    src={`https://open.spotify.com/embed/playlist/${playlist.spotifyId}?theme=0`}
-                    height={152}
-                    style={{ width: "100%", border: "none", borderRadius: "var(--radius-control)" }}
-                    allow="encrypted-media"
-                    loading="lazy"
-                  />
+                  <>
+                    <iframe
+                      title={`Preview of ${playlist.name}`}
+                      src={`https://open.spotify.com/embed/playlist/${playlist.spotifyId}?theme=0`}
+                      height={152}
+                      style={{
+                        width: "100%",
+                        border: "none",
+                        borderRadius: "var(--radius-control)",
+                      }}
+                      allow="encrypted-media"
+                      loading="lazy"
+                    />
+                    {tracksByPlaylist.has(playlist.id) ? (
+                      <ul>
+                        {(tracksByPlaylist.get(playlist.id) ?? []).map((track) => (
+                          <li className="queue-row" key={track.spotifyTrackId}>
+                            <span>
+                              {track.artist && track.title
+                                ? `${track.artist} — ${track.title}`
+                                : `Track ${track.spotifyTrackId}`}
+                            </span>
+                            <button
+                              type="button"
+                              className="btn btn--ghost btn--small"
+                              disabled={track.kept || keepingTrackId === track.spotifyTrackId}
+                              onClick={() => keepTrack(playlist.id, track)}
+                            >
+                              {track.kept
+                                ? "Kept"
+                                : keepingTrackId === track.spotifyTrackId
+                                  ? "Keeping…"
+                                  : "Keep"}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <Skeleton height="40px" />
+                    )}
+                  </>
                 )}
               </li>
             ))}

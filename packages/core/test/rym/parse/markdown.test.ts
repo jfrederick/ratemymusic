@@ -4,6 +4,7 @@ import {
   extractNextPageUrl,
   extractReleaseItems,
   splitTableRow,
+  unescapeMarkdown,
 } from "../../../src/rym/parse/markdown.js";
 
 describe("extractLinks", () => {
@@ -58,12 +59,22 @@ describe("extractLinks", () => {
     });
   });
 
-  it("tolerates escaped brackets inside link text", () => {
+  it("tolerates escaped brackets inside link text, and unescapes them in the returned text", () => {
     const md =
       "[Depressive Silence \\[II\\]](https://rateyourmusic.com/release/album/depressive-silence/depressive-silence-ii/)";
     const links = extractLinks(md);
     expect(links).toHaveLength(1);
-    expect(links[0].text).toBe("Depressive Silence \\[II\\]");
+    expect(links[0].text).toBe("Depressive Silence [II]");
+  });
+
+  it("unescapes an escaped underscore in link text (e.g. a RYM username)", () => {
+    const links = extractLinks("[No\\_Username](https://rateyourmusic.com/~no_username)");
+    expect(links[0].text).toBe("No_Username");
+  });
+
+  it("unescapes the title attribute too", () => {
+    const links = extractLinks('[X](https://a.example/ "The Beatles \\[White Album\\]")');
+    expect(links[0].title).toBe("The Beatles [White Album]");
   });
 
   it("extracts multiple links in document order with correct indices", () => {
@@ -76,6 +87,17 @@ describe("extractLinks", () => {
 
   it("returns an empty array when there are no links", () => {
     expect(extractLinks("just some plain text")).toEqual([]);
+  });
+});
+
+describe("unescapeMarkdown", () => {
+  it("strips the backslash from an escaped character", () => {
+    expect(unescapeMarkdown("Depressive Silence \\[II\\]")).toBe("Depressive Silence [II]");
+    expect(unescapeMarkdown("No\\_Username")).toBe("No_Username");
+  });
+
+  it("leaves plain text unchanged", () => {
+    expect(unescapeMarkdown("Plain Title")).toBe("Plain Title");
   });
 });
 
@@ -133,5 +155,13 @@ describe("extractReleaseItems", () => {
       "[B](https://rateyourmusic.com/release/album/y/b/) [Artist Y](https://rateyourmusic.com/artist/y)";
     const items = extractReleaseItems(md);
     expect(items.map((i) => i.rymUrl)).toEqual(["/release/album/x/a/", "/release/album/y/b/"]);
+  });
+
+  it("unescapes backslash-escaped brackets in the title", () => {
+    const md =
+      "[The Beatles \\[White Album\\]](https://rateyourmusic.com/release/album/the-beatles/white-album/) " +
+      "[The Beatles](https://rateyourmusic.com/artist/the-beatles)";
+    const items = extractReleaseItems(md);
+    expect(items[0].title).toBe("The Beatles [White Album]");
   });
 });

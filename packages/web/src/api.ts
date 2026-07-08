@@ -50,6 +50,8 @@ export type SyncReport = {
   };
 };
 
+export type CronError = { step: string; message: string; at: string };
+
 export type StatusResponse = {
   spotifyConnected: boolean;
   budget: { spentToday: number; spentTotal: number; daily: number; initial: number };
@@ -61,6 +63,7 @@ export type StatusResponse = {
     candidatesNew: number;
   };
   lastSync: SyncReport | null;
+  lastCronError: CronError | null;
   tasteProfileComputedAt: string | null;
 };
 
@@ -73,6 +76,15 @@ export type PlaylistSummary = {
   mode: PlaylistMode;
   createdAt: string;
   trackCount: number;
+};
+
+export type PlaylistTrackView = {
+  position: number;
+  spotifyTrackId: string;
+  albumId: number | null;
+  kept: boolean;
+  artist: string | null;
+  title: string | null;
 };
 
 export type CreatePlaylistBody = {
@@ -300,6 +312,14 @@ export const api = {
     request("/api/playlists", { method: "POST", body: JSON.stringify(body) }),
 
   getPlaylists: (): Promise<PlaylistSummary[]> => request("/api/playlists"),
+
+  getPlaylistTracks: (id: number): Promise<PlaylistTrackView[]> =>
+    request(`/api/playlists/${id}/tracks`),
+
+  keepTrack: (body: { spotifyTrackId: string; albumId?: number }): Promise<{
+    ok: true;
+    playlistId: string;
+  }> => request("/api/playlists/tracks/keep", { method: "POST", body: JSON.stringify(body) }),
 
   createDailyPlaylist: (): Promise<PushDailyResult> =>
     request("/api/playlists/daily", { method: "POST" }),

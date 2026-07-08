@@ -53,7 +53,8 @@ re-runs are cheap.
 | `npm run sync` | Ingest pipeline: works the scrape frontier (collections → albums → lists → twins → charts) against Firecrawl, respecting budget caps and TTLs. |
 | `npm run discover` | Recomputes the taste profile and re-scores candidates from the current local graph. No network. |
 | `npm run serve` | Starts the Hono API server (and serves the built web UI if present) on `PORT` (default 8787). |
-| `npm run push-daily` | Builds and pushes the rolling daily playlist to Spotify from top unplayed candidates. Also runnable via the `launchd` job in `ops/launchd/`. |
+| `npm run push-daily -w @rmm/core` | Builds and pushes the rolling daily playlist to Spotify from top unplayed candidates. |
+| `npm run daily` | Full daily automation: sync (capped at 30 pages) → discover → push-daily, each step running even if an earlier one fails. This is what the `launchd` job in `ops/launchd/` runs. |
 | `npm test` | Vitest unit + integration tests (parsers against real-scrape fixtures, scoring math, budget ledger, server routes with mocked externals). |
 | `npm run check` | Biome lint/format check + TypeScript typecheck across all workspaces. |
 | `npm run smoke` | No-browser end-to-end smoke test: seeds a throwaway DB, boots the real server, exercises the core HTTP surface. No API keys or network required. |
