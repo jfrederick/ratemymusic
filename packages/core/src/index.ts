@@ -45,3 +45,21 @@ export {
   firecrawlApiKeyFromCli,
 } from "./scrape/firecrawl.js";
 export type { FirecrawlScraperOptions, ScrapeBudget } from "./scrape/firecrawl.js";
+
+// Ingest pipeline
+export {
+  replaceChartItems,
+  replaceListItems,
+  upsertAlbum,
+  upsertChart,
+  upsertList,
+  upsertMyRating,
+  upsertTwin,
+  upsertTwinRating,
+} from "./ingest/upserts.js";
+export type { ChartUpsert, ListUpsert } from "./ingest/upserts.js";
+export { PRIORITY, enqueue, markDone, markFailed, nextPending } from "./ingest/frontier.js";
+export type { QueueKind } from "./ingest/frontier.js";
+export { TTL_DAYS } from "./ingest/ttl.js";
+export { runSync } from "./ingest/sync.js";
+export type { SyncOptions, SyncReport } from "./ingest/sync.js";
