@@ -155,6 +155,24 @@ describe("genreMethod", () => {
     expect(result.get(item2)?.score).toBeCloseTo(expectedRatio);
   });
 
+  it("matches multi-word profile genres against slug-form chart genres (Indie Folk vs indie-folk)", () => {
+    const db = openDb(":memory:");
+    const profile = { ...emptyProfile(), genres: { "Indie Folk": 0.9 } };
+    const chartId = upsertChart(db, {
+      rymUrl: "/genre/indie-folk/",
+      kind: "genre-page",
+      params: { genre: "indie-folk" },
+    });
+    const a = album(db, "slugmatch");
+    db.prepare("INSERT INTO chart_items (chart_id, album_id, position) VALUES (?, ?, 1)").run(
+      chartId,
+      a,
+    );
+
+    const result = genreMethod(db, profile);
+    expect(result.get(a)?.score).toBeCloseTo(1);
+  });
+
   it("excludes known albums and charts for genres absent from the profile", () => {
     const db = openDb(":memory:");
     const profile = { ...emptyProfile(), genres: { X: 0.8 } };
