@@ -165,7 +165,7 @@ describe("SpotifyClient album/track reads", () => {
 });
 
 describe("SpotifyClient playlist writes", () => {
-  it("createPlaylist posts to /users/{id}/playlists", async () => {
+  it("createPlaylist posts to /me/playlists (legacy /users/{id} form 403s on newer apps)", async () => {
     const fetchImpl = vi.fn(async (_url: string | URL, _init?: RequestInit) =>
       jsonResponse({ id: "playlist-1" }),
     );
@@ -173,11 +173,11 @@ describe("SpotifyClient playlist writes", () => {
       auth: fakeAuth(),
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
-    const result = await sp.createPlaylist("user-1", { name: "My Playlist" });
+    const result = await sp.createPlaylist({ name: "My Playlist" });
     expect(result).toEqual({ id: "playlist-1" });
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     const [url, init] = fetchImpl.mock.calls[0];
-    expect(String(url)).toContain("/users/user-1/playlists");
+    expect(String(url)).toContain("/me/playlists");
     expect(init?.method).toBe("POST");
   });
 
