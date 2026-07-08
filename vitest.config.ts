@@ -25,6 +25,7 @@ export default defineConfig({
           root: "./packages/web",
           environment: "jsdom",
           include: ["test/**/*.test.tsx"],
+          setupFiles: ["./test/setup.ts"],
         },
       },
     ],
