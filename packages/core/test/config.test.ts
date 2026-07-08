@@ -7,6 +7,7 @@ describe("loadConfig", () => {
     expect(config).toEqual({
       spotifyClientId: "40f98cc66e5b40e6a925dfa00e5bdbb1",
       anthropicApiKey: null,
+      anthropicModel: "claude-opus-4-8",
       firecrawlApiKey: null,
       budgetDaily: 50,
       budgetInitial: 400,
@@ -21,6 +22,7 @@ describe("loadConfig", () => {
     const config = loadConfig({
       SPOTIFY_CLIENT_ID: "custom-client-id",
       ANTHROPIC_API_KEY: "sk-ant-123",
+      ANTHROPIC_MODEL: "claude-sonnet-5",
       FIRECRAWL_API_KEY: "fc-123",
       BUDGET_DAILY: "10",
       BUDGET_INITIAL: "100",
@@ -31,6 +33,7 @@ describe("loadConfig", () => {
     });
     expect(config.spotifyClientId).toBe("custom-client-id");
     expect(config.anthropicApiKey).toBe("sk-ant-123");
+    expect(config.anthropicModel).toBe("claude-sonnet-5");
     expect(config.firecrawlApiKey).toBe("fc-123");
     expect(config.budgetDaily).toBe(10);
     expect(config.budgetInitial).toBe(100);
@@ -50,11 +53,13 @@ describe("loadConfig", () => {
     const config = loadConfig({
       SPOTIFY_CLIENT_ID: "",
       ANTHROPIC_API_KEY: "",
+      ANTHROPIC_MODEL: "",
       BUDGET_DAILY: "",
       PORT: "",
     });
     expect(config.spotifyClientId).toBe("40f98cc66e5b40e6a925dfa00e5bdbb1");
     expect(config.anthropicApiKey).toBeNull();
+    expect(config.anthropicModel).toBe("claude-opus-4-8");
     expect(config.budgetDaily).toBe(50);
     expect(config.port).toBe(8787);
   });

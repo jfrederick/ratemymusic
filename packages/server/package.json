@@ -10,6 +10,7 @@
     "start": "tsx src/main.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
     "@hono/node-server": "^1.13.8",
     "@rmm/core": "*",
     "dotenv": "^17.4.2",

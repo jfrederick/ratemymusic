@@ -18,7 +18,12 @@ import {
 } from "@rmm/core";
 import { Hono } from "hono";
 import type { Context } from "hono";
+import { streamSSE } from "hono/streaming";
+import { type ChatMessage, runChat } from "./chat/service.js";
 import type { AppDeps } from "./deps.js";
+
+const MAX_CHAT_MESSAGES = 40;
+const MAX_CHAT_MESSAGE_CHARS = 4000;
 
 type CandidateRow = {
   albumId: number;
@@ -272,6 +277,65 @@ export function createApp(deps: AppDeps): Hono {
     const fn = deps.runDiscoveryFn ?? runDiscovery;
     const result = await fn(deps.db, { weights: deps.config.blendWeights });
     return c.json(result);
+  });
+
+  app.post("/api/chat", async (c) => {
+    if (!deps.anthropicClient) {
+      return c.json({ error: "chat unavailable — set ANTHROPIC_API_KEY" }, 503);
+    }
+
+    const body = (await c.req.json().catch(() => ({}))) as { messages?: unknown };
+    const rawMessages = Array.isArray(body.messages) ? body.messages : [];
+    if (rawMessages.length === 0 || rawMessages.length > MAX_CHAT_MESSAGES) {
+      return c.json(
+        { error: `messages must contain between 1 and ${MAX_CHAT_MESSAGES} items` },
+        400,
+      );
+    }
+
+    const messages: ChatMessage[] = [];
+    for (const raw of rawMessages) {
+      const m = raw as { role?: unknown; content?: unknown };
+      if (
+        (m.role !== "user" && m.role !== "assistant") ||
+        typeof m.content !== "string" ||
+        m.content.length > MAX_CHAT_MESSAGE_CHARS
+      ) {
+        return c.json(
+          {
+            error: `each message must have role 'user'|'assistant' and content of at most ${MAX_CHAT_MESSAGE_CHARS} characters`,
+          },
+          400,
+        );
+      }
+      messages.push({ role: m.role, content: m.content });
+    }
+
+    return streamSSE(c, async (stream) => {
+      // Serializes writes triggered from runChat's synchronous callbacks (onDelta/onToolEvent),
+      // which may otherwise race each other across microtask boundaries.
+      let queue: Promise<void> = Promise.resolve();
+      const enqueue = (write: () => Promise<void>) => {
+        queue = queue.then(write);
+      };
+
+      try {
+        const result = await runChat(
+          deps,
+          messages,
+          (text) =>
+            enqueue(() => stream.writeSSE({ event: "delta", data: JSON.stringify({ text }) })),
+          (name) =>
+            enqueue(() => stream.writeSSE({ event: "tool", data: JSON.stringify({ name }) })),
+        );
+        await queue;
+        await stream.writeSSE({ event: "done", data: JSON.stringify(result) });
+      } catch (err) {
+        await queue.catch(() => {});
+        const message = err instanceof Error ? err.message : String(err);
+        await stream.writeSSE({ event: "error", data: JSON.stringify({ message }) });
+      }
+    });
   });
 
   app.get("/auth/spotify", (c) => {

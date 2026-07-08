@@ -53,6 +53,8 @@ export function buildTestDeps(overrides: Partial<AppDeps> = {}): AppDeps {
     runDiscoveryFn: overrides.runDiscoveryFn,
     pushDailyFn: overrides.pushDailyFn,
     buildAndPushPlaylistFn: overrides.buildAndPushPlaylistFn,
+    anthropic: overrides.anthropic ?? { apiKey: null, model: "claude-opus-4-8" },
+    anthropicClient: overrides.anthropicClient ?? null,
   };
 }
 
