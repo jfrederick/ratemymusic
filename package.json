@@ -12,7 +12,8 @@
     "test": "vitest run",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "sync": "npm run sync -w @rmm/core --"
+    "sync": "npm run sync -w @rmm/core --",
+    "discover": "npm run discover -w @rmm/core"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

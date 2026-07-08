@@ -79,3 +79,27 @@ export type {
   BuildAndPushPlaylistResult,
 } from "./spotify/playlist.js";
 export { pushDaily } from "./spotify/daily.js";
+
+// Discovery engine
+export {
+  ratingWeight,
+  knownAlbumIds,
+  normalizeScores,
+  positionDecay,
+} from "./discovery/weights.js";
+export {
+  computeTasteProfile,
+  saveTasteProfile,
+  loadTasteProfile,
+} from "./discovery/profile.js";
+export { computeListAffinities } from "./discovery/listAffinity.js";
+export {
+  listMethod,
+  twinMethod,
+  genreMethod,
+  descriptorMethod,
+  newMethod,
+} from "./discovery/methods.js";
+export { blendCandidates, qualityPrior } from "./discovery/blend.js";
+export type { BlendWeights } from "./discovery/blend.js";
+export { runDiscovery, DEFAULT_BLEND_WEIGHTS } from "./discovery/index.js";
