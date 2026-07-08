@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.jim.ratemymusic.server</string>
+
+  <!-- Update to `which npm` and your checkout path if they differ. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/jim/.local/bin/npm</string>
+    <string>run</string>
+    <string>serve</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/jim/dev/jim/ratemymusic</string>
+
+  <!-- launchd's default PATH lacks the node/npm install dir; npm's shebang needs node on PATH. -->
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/Users/jim/.local/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <!-- Start at login and restart if the process dies. -->
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <!-- Back off instead of hot-looping if the server crashes immediately (e.g. port taken). -->
+  <key>ThrottleInterval</key>
+  <integer>15</integer>
+
+  <key>StandardOutPath</key>
+  <string>/Users/jim/dev/jim/ratemymusic/data/logs/server.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/jim/dev/jim/ratemymusic/data/logs/server.err.log</string>
+</dict>
+</plist>
