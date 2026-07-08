@@ -17,6 +17,7 @@ import {
   setSetting,
 } from "@rmm/core";
 import { Hono } from "hono";
+import type { Context } from "hono";
 import type { AppDeps } from "./deps.js";
 
 type CandidateRow = {
@@ -291,7 +292,16 @@ export function createApp(deps: AppDeps): Hono {
     return c.redirect("/#/settings?spotify=connected", 302);
   });
 
-  const webDistAbs = resolve(dirname(fileURLToPath(import.meta.url)), "../../web/dist");
+  // Guard the SPA static fallback below: /api and /auth requests that didn't match any route
+  // above (and any method on /callback other than the GET handled earlier) must return a JSON
+  // 404, never the SPA's index.html. Registered after all real routes, so real routes still win.
+  const notFoundJson = (c: Context) => c.json({ error: "not found" }, 404);
+  app.all("/api/*", notFoundJson);
+  app.all("/auth/*", notFoundJson);
+  app.all("/callback", notFoundJson);
+
+  const webDistAbs =
+    deps.webDistDir ?? resolve(dirname(fileURLToPath(import.meta.url)), "../../web/dist");
   if (existsSync(webDistAbs)) {
     // Absolute paths work fine here even though @hono/node-server's types describe `root` as
     // CWD-relative -- serveStatic just does node:path.join(root, filename), which is cwd-agnostic

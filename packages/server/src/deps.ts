@@ -30,6 +30,8 @@ export type AppDeps = {
   };
   spotify: SpotifyClientType | null;
   budget: BudgetLedger;
+  /** Overrides the directory `createApp` serves the built SPA from. Defaults to `packages/web/dist`. */
+  webDistDir?: string;
   runSyncFn?: typeof runSync;
   runDiscoveryFn?: typeof runDiscovery;
   pushDailyFn?: typeof pushDaily;

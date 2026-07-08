@@ -48,6 +48,7 @@ export function buildTestDeps(overrides: Partial<AppDeps> = {}): AppDeps {
     spotifyAuth: overrides.spotifyAuth ?? fakeSpotifyAuth(false),
     spotify: overrides.spotify ?? null,
     budget,
+    webDistDir: overrides.webDistDir,
     runSyncFn: overrides.runSyncFn,
     runDiscoveryFn: overrides.runDiscoveryFn,
     pushDailyFn: overrides.pushDailyFn,
