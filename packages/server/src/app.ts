@@ -321,8 +321,7 @@ export function createApp(deps: AppDeps): Hono {
       if (!existing) playlistId = null;
     }
     if (!playlistId) {
-      const me = await deps.spotify.me();
-      const created = await deps.spotify.createPlaylist(me.id, {
+      const created = await deps.spotify.createPlaylist({
         name: KEEPERS_PLAYLIST_NAME,
         description: "Tracks kept from ratemymusic-built playlists.",
         public: false,

@@ -303,22 +303,22 @@ export class SpotifyClient {
     return { id: body.id, displayName: body.display_name ?? null };
   }
 
-  async createPlaylist(
-    userId: string,
-    o: { name: string; description?: string; public?: boolean },
-  ): Promise<{ id: string }> {
-    const body = await this.requestJson<{ id: string }>(
-      `/users/${encodeURIComponent(userId)}/playlists`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: o.name,
-          description: o.description ?? "",
-          public: o.public ?? false,
-        }),
-      },
-    );
+  // Spotify returns a bare 403 Forbidden from the legacy /users/{id}/playlists form for
+  // newer apps; /me/playlists is the working endpoint (verified live 2026-07-08).
+  async createPlaylist(o: {
+    name: string;
+    description?: string;
+    public?: boolean;
+  }): Promise<{ id: string }> {
+    const body = await this.requestJson<{ id: string }>("/me/playlists", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: o.name,
+        description: o.description ?? "",
+        public: o.public ?? false,
+      }),
+    });
     return { id: body.id };
   }
 

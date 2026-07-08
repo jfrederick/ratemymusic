@@ -2,4 +2,34 @@
 > @rmm/server@0.0.0 start
 > tsx src/main.ts
 
-ratemymusic listening on http://127.0.0.1:8787
+node:events:497
+      throw er; // Unhandled 'enpm error Lifecycle script `start` failed with error:
+npm error code 143
+npm error path /Users/jim/dev/jim/ratemymusic/packages/server
+npm error workspace @rmm/server@0.0.0
+npm error location /Users/jim/dev/jim/ratemymusic/packages/server
+npm error command failed
+npm error command sh -c tsx src/main.ts
+er/dist/index.mjs:651:10)
+    at <anonymous> (/Users/jim/dev/jim/ratemymusic/packages/server/src/main.ts:10:1)
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '::',
+  port: 8787
+}
+
+Node.js v22.22.3
+npm error Lifecycle script `start` failed with error:
+npm error code 1
+npm error path /Users/jim/dev/jim/ratemymusic/packages/server
+npm error workspace @rmm/server@0.0.0
+npm error location /Users/jim/dev/jim/ratemymusic/packages/server
+npm error command failed
+npm error command sh -c tsx src/main.ts

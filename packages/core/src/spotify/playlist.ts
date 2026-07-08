@@ -68,8 +68,7 @@ export async function buildAndPushPlaylist(
     spotifyPlaylistId = o.replacePlaylistId;
     await sp.replacePlaylistItems(spotifyPlaylistId, uris);
   } else {
-    const me = await sp.me();
-    const created = await sp.createPlaylist(me.id, {
+    const created = await sp.createPlaylist({
       name: o.name,
       description: o.description,
       public: false,
