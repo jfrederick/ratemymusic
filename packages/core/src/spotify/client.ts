@@ -282,7 +282,7 @@ export class SpotifyClient {
     const results: ({ id: string; name: string; popularity: number } | null)[] = new Array(
       ids.length,
     ).fill(null);
-    const concurrency = 4;
+    const concurrency = 2;
     let cursor = 0;
     const worker = async (): Promise<void> => {
       while (cursor < ids.length) {
@@ -376,12 +376,16 @@ export class SpotifyClient {
   }
 
   private async fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
+    // 429s are routine for dev-mode apps since the Feb 2026 batch-endpoint removal forces
+    // per-track fan-outs; be patient and honor Retry-After for up to 5 attempts. 5xx keeps
+    // its single retry.
     let res = await this.fetchImpl(url, init);
-    if (res.status === 429) {
+    for (let attempt = 0; res.status === 429 && attempt < 5; attempt++) {
       const retryAfter = Number(res.headers.get("retry-after") ?? "1");
-      await this.sleep(retryAfter * 1000);
+      await this.sleep(Math.min(retryAfter, 60) * 1000);
       res = await this.fetchImpl(url, init);
-    } else if (res.status >= 500 && res.status < 600) {
+    }
+    if (res.status >= 500 && res.status < 600) {
       res = await this.fetchImpl(url, init);
     }
     return res;

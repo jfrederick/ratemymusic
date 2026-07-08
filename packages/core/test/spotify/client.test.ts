@@ -73,6 +73,23 @@ describe("SpotifyClient.searchAlbum", () => {
 });
 
 describe("SpotifyClient retry behavior", () => {
+  it("keeps retrying 429s (up to 5) honoring Retry-After", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("", { status: 429, headers: { "Retry-After": "0" } }))
+      .mockResolvedValueOnce(new Response("", { status: 429, headers: { "Retry-After": "0" } }))
+      .mockResolvedValueOnce(new Response("", { status: 429, headers: { "Retry-After": "0" } }))
+      .mockResolvedValueOnce(jsonResponse({ id: "me-id", display_name: "Me" }));
+    const sp = new SpotifyClient({
+      auth: fakeAuth(),
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      sleep: async () => {},
+    });
+    const me = await sp.me();
+    expect(me.id).toBe("me-id");
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+  });
+
   it("honors Retry-After on 429 and succeeds after a single retry", async () => {
     const sleep = vi.fn(async () => {});
     const fetchImpl = vi
@@ -164,7 +181,7 @@ describe("SpotifyClient album/track reads", () => {
     );
   });
 
-  it("caps tracksDetails concurrency at 4 in-flight requests", async () => {
+  it("caps tracksDetails concurrency at 2 in-flight requests", async () => {
     let inFlight = 0;
     let maxInFlight = 0;
     const ids = Array.from({ length: 10 }, (_, i) => `id${i}`);
@@ -182,7 +199,7 @@ describe("SpotifyClient album/track reads", () => {
     });
     await sp.tracksDetails(ids);
     expect(fetchImpl).toHaveBeenCalledTimes(10);
-    expect(maxInFlight).toBeLessThanOrEqual(4);
+    expect(maxInFlight).toBeLessThanOrEqual(2);
     expect(maxInFlight).toBeGreaterThan(1);
   });
 
