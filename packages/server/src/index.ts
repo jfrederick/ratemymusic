@@ -1,9 +1,4 @@
-import { Hono } from "hono";
-
-export function createApp() {
-  const app = new Hono();
-
-  app.get("/api/health", (c) => c.json({ ok: true }));
-
-  return app;
-}
+export { createApp } from "./app.js";
+export type { CandidateView } from "./app.js";
+export { buildDeps } from "./deps.js";
+export type { AppDeps } from "./deps.js";
