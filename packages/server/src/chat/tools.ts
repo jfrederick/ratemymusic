@@ -38,6 +38,11 @@ export type TasteProfileSummary = {
 
 const TOP_N = 15;
 
+/** Fold case and treat spaces/hyphens/underscores alike so 'Indie Folk' matches slug 'indie-folk'. */
+export function normalizeGenre(g: string): string {
+  return g.toLowerCase().replace(/[\s_-]+/g, "-");
+}
+
 function topEntries(map: Record<string, number>, n: number): WeightedEntry[] {
   return Object.entries(map)
     .sort((a, b) => b[1] - a[1])
@@ -197,7 +202,7 @@ async function searchCandidatesExecutor(deps: AppDeps, rawInput: unknown): Promi
     knownArtists = new Set(artistRows.map((r) => r.artist.toLowerCase()));
   }
 
-  const genreNeedles = (input.genres ?? []).map((g) => g.toLowerCase());
+  const genreNeedles = (input.genres ?? []).map((g) => normalizeGenre(g));
   const descriptorNeedles = (input.descriptors ?? []).map((d) => d.toLowerCase());
 
   const results: SearchCandidateResult[] = [];
@@ -213,7 +218,7 @@ async function searchCandidatesExecutor(deps: AppDeps, rawInput: unknown): Promi
 
     if (genreNeedles.length > 0) {
       const albumGenreMatch = genres.some((g) =>
-        genreNeedles.some((n) => g.toLowerCase().includes(n)),
+        genreNeedles.some((n) => normalizeGenre(g).includes(n)),
       );
       // Most genre-chart candidates never get their own album-page scrape and so never carry
       // album-level genres at all (C1) -- fall back to the genre scoring component's chart
@@ -222,7 +227,7 @@ async function searchCandidatesExecutor(deps: AppDeps, rawInput: unknown): Promi
       const evidenceGenreMatch =
         genreComponent?.evidence.method === "genre" &&
         genreComponent.evidence.charts.some((chart) =>
-          genreNeedles.some((n) => chart.genre.toLowerCase().includes(n)),
+          genreNeedles.some((n) => normalizeGenre(chart.genre).includes(n)),
         );
       if (!albumGenreMatch && !evidenceGenreMatch) continue;
     }

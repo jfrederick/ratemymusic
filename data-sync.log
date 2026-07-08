@@ -1,0 +1,435 @@
+
+> sync
+> npm run sync -w @rmm/core -- --max-pages 300
+
+
+> @rmm/core@0.0.0 sync
+> npm run build && node dist/cli/sync.js --max-pages 300
+
+
+> @rmm/core@0.0.0 build
+> tsc -p tsconfig.json
+
+◇ injected env (9) from ../../.env // tip: ⌁ auth for agents [www.vestauth.com]
+[sync] scraped collection /collection/jimbof36/r5.0/ (1/300)
+[sync] scraped collection /collection/jimbof36/r4.5/ (2/300)
+[sync] scraped collection /collection/jimbof36/r4.0/ (3/300)
+[sync] scraped collection /collection/jimbof36/r3.5/ (4/300)
+[sync] scraped collection /collection/jimbof36/r3.0/ (5/300)
+[sync] scraped collection /collection/jimbof36/r4.5/2/ (6/300)
+[sync] scraped collection /collection/jimbof36/r4.0/2/ (7/300)
+[sync] scraped collection /collection/jimbof36/r3.5/2/ (8/300)
+[sync] scraped collection /collection/jimbof36/r4.5/2/2/ (9/300)
+[sync] scraped collection /collection/jimbof36/r4.0/2/2/ (10/300)
+[sync] scraped collection /collection/jimbof36/r3.5/2/2/ (11/300)
+[sync] scraped album /release/album/bon-iver/for-emma-forever-ago/ (12/300)
+[sync] scraped album /release/album/john-coltrane/a-love-supreme/ (13/300)
+[sync] scraped album /release/album/miles-davis/in-a-silent-way/ (14/300)
+[sync] scraped album /release/album/brian-eno/ambient-1-music-for-airports/ (15/300)
+[sync] scraped album /release/album/jackson-c-frank/jackson-c-frank/ (16/300)
+[sync] scraped album /release/album/jackson-c-frank/jackson-c-frank/ (16/300)
+[sync] scraped album /release/album/jackson-c-frank/jackson-c-frank/ (16/300)
+[sync] scraped album /release/album/mingus/the-black-saint-and-the-sinner-lady/ (17/300)
+[sync] scraped album /release/album/slowdive/souvlaki/ (18/300)
+[sync] scraped album /release/album/songs-ohia/the-lioness/ (19/300)
+[sync] scraped album /release/album/songs-ohia/the-magnolia-electric-co/ (20/300)
+[sync] scraped album /release/album/adele/21/ (21/300)
+[sync] scraped album /release/album/alela-diane/to-be-still/ (22/300)
+[sync] scraped album /release/album/anohni-and-the-johnsons/i-am-a-bird-now/ (23/300)
+[sync] scraped album /release/album/arcade-fire/funeral-5/ (24/300)
+[sync] scraped album /release/album/devendra-banhart/oh-me-oh-my_the-way-the-day-goes-by-the-sun-is-setting-dogs-are-dreaming-lovesongs-of-the-christmas-spirit/ (25/300)
+[sync] scraped album /release/album/devendra-banhart/rejoicing-in-the-hands/ (26/300)
+[sync] scraped album /release/album/beach-house/devotion/ (27/300)
+[sync] scraped album /release/album/belle-and-sebastian/dear-catastrophe-waitress/ (28/300)
+[sync] scraped album /release/album/dave-bixby/ode-to-quetzalcoatl/ (29/300)
+[sync] scraped album /release/album/bloc-party/silent-alarm/ (30/300)
+[sync] scraped album /release/album/bright-eyes/im-wide-awake-its-morning/ (31/300)
+[sync] scraped album /release/album/bush/sixteen-stone/ (32/300)
+[sync] scraped album /release/album/bush/razorblade-suitcase/ (33/300)
+[sync] scraped album /release/album/cat-power/you-are-free/ (34/300)
+[sync] scraped album /release/album/leonard-cohen/songs-of-leonard-cohen/ (35/300)
+[sync] scraped album /release/comp/leonard-cohen/the-best-of-leonard-cohen/ (36/300)
+[sync] scraped album /release/album/coldplay/a-rush-of-blood-to-the-head/ (37/300)
+[sync] scraped album /release/album/crystal-castles/crystal-castles/ (38/300)
+[sync] scraped album /release/album/miles-davis/kind-of-blue/ (39/300)
+[sync] scraped album /release/album/miles-davis/bitches-brew/ (40/300)
+[sync] scraped album /release/album/death-cab-for-cutie/transatlanticism/ (41/300)
+[sync] scraped album /release/album/destroyer/trouble-in-dreams/ (42/300)
+[sync] scraped album /release/album/electrelane/no-shouts-no-calls/ (43/300)
+[sync] scraped album /release/album/electrelane/no-shouts-no-calls/ (43/300)
+[sync] scraped album /release/album/electrelane/no-shouts-no-calls/ (43/300)
+[sync] scraped album /release/album/lisa-germano/geek-the-girl-2/ (44/300)
+[sync] scraped album /release/album/benjamin-gibbard-and-andrew-kenny/home-volume-5/ (45/300)
+[sync] scraped album /release/album/adele/25/ (46/300)
+[sync] scraped album /release/album/anohni-and-the-johnsons/antony-and-the-johnsons/ (47/300)
+[sync] scraped album /release/album/joan-baez/diamonds-and-rust/ (48/300)
+[sync] scraped album /release/album/devendra-banhart/nino-rojo/ (49/300)
+[sync] scraped album /release/album/devendra-banhart/cripple-crow/ (50/300)
+[sync] scraped album /release/album/beach-house/teen-dream/ (51/300)
+[sync] scraped album /release/album/beck/sea-change/ (52/300)
+[sync] scraped album /release/album/belle-and-sebastian/tigermilk/ (53/300)
+[sync] scraped album /release/album/belle-and-sebastian/if-youre-feeling-sinister/ (54/300)
+[sync] scraped album /release/album/billie_the_vision_and_the_dancers/the_world_according_to_pablo/ (55/300)
+[sync] scraped album /release/album/andrew-bird/andrew-bird-and-the-mysterious-production-of-eggs/ (56/300)
+[sync] scraped album /release/album/david-bowie/the-rise-and-fall-of-ziggy-stardust-and-the-spiders-from-mars/ (57/300)
+[sync] scraped album /release/album/bright-eyes/digital-ash-in-a-digital-urn/ (58/300)
+[sync] scraped album /release/album/broken-social-scene/you-forgot-it-in-people/ (59/300)
+[sync] scraped album /release/album/david-thomas-broughton/the-complete-guide-to-insufficiency/ (60/300)
+[sync] scraped album /release/album/built-to-spill/perfect-from-now-on/ (61/300)
+[sync] scraped album /release/album/carissas-wierd/songs-about-leaving/ (62/300)
+[sync] scraped album /release/album/cat-power/what-would-the-community-think/ (63/300)
+[sync] scraped album /release/album/nick-cave-and-the-bad-seeds/let-love-in/ (64/300)
+[sync] scraped album /release/album/gene-clark/no-other/ (65/300)
+[sync] scraped album /release/album/leonard-cohen/songs-from-a-room/ (66/300)
+[sync] scraped album /release/album/coldplay/parachutes/ (67/300)
+[sync] scraped album /release/album/lana-del-rey/born-to-die/ (68/300)
+[sync] scraped album /release/album/electrelane/the-power-out/ (69/300)
+[sync] scraped album /release/album/the-flaming-lips/yoshimi-battles-the-pink-robots/ (70/300)
+[sync] scraped album /release/album/gorillaz/demon-days/ (71/300)
+[sync] scraped album /release/ep/iron-and-wine/woman-king/ (72/300)
+[sync] scraped album /release/album/simon-joyner/hotel-lives/ (73/300)
+[sync] scraped album /release/album/adrianne-lenker/songs/ (74/300)
+[sync] scraped album /release/album/stephen-malkmus/stephen-malkmus/ (75/300)
+[sync] scraped album /release/album/the-microphones/the-glow-pt-2/ (76/300)
+[sync] scraped album /release/album/mitski/bury-me-at-makeout-creek/ (77/300)
+[sync] scraped album /release/album/mogwai/mogwai-young-team/ (78/300)
+[sync] scraped album /release/album/mogwai/come-on-die-young/ (79/300)
+[sync] scraped album /release/album/the-mountain-goats/full-force-galesburg/ (80/300)
+[sync] scraped album /release/album/the-mountain-goats/all-hail-west-texas/ (81/300)
+[sync] scraped album /release/album/the-mountain-goats/tallahassee/ (82/300)
+[sync] scraped album /release/album/neutral-milk-hotel/in-the-aeroplane-over-the-sea/ (83/300)
+[sync] scraped album /release/album/neutral-milk-hotel/in-the-aeroplane-over-the-sea/ (83/300)
+[sync] scraped album /release/album/neutral-milk-hotel/in-the-aeroplane-over-the-sea/ (83/300)
+[sync] scraped album /release/album/pixies/doolittle/ (84/300)
+[sync] scraped album /release/album/radiohead/ok-computer/ (85/300)
+[sync] scraped album /release/album/radiohead/hail-to-the-thief/ (86/300)
+[sync] scraped album /release/album/radiohead/hail-to-the-thief/ (86/300)
+[sync] scraped album /release/album/radiohead/hail-to-the-thief/ (86/300)
+[sync] scraped album /release/album/radiohead/in-rainbows/ (87/300)
+[sync] scraped album /release/album/ratatat/ratatat/ (88/300)
+[sync] scraped album /release/album/hope-sandoval-and-the-warm-inventions/bavarian-fruit-bread/ (89/300)
+[sync] scraped album /release/album/a-silver-mt-zion/he-has-left-us-alone-but-shafts-of-light-sometimes-grace-the-corner-of-our-rooms/ (90/300)
+[sync] scraped album /release/album/the-silver-mt-zion-memorial-orchestra-and-tra-la-la-band/born-into-trouble-as-the-sparks-fly-upward/ (91/300)
+[sync] scraped album /release/album/slowdive/slowdive-2/ (92/300)
+[sync] scraped album /release/album/elliott-smith/elliott-smith/ (93/300)
+[sync] scraped album /release/album/elliott-smith/either-or/ (94/300)
+[sync] scraped album /release/album/sparklehorse/vivadixiesubmarinetransmissionplot/ (95/300)
+[sync] scraped album /release/album/franz-ferdinand/franz-ferdinand/ (96/300)
+[sync] scraped album /release/album/guided-by-voices/bee-thousand/ (97/300)
+[sync] scraped album /release/album/hotel-lights/hotel-lights/ (98/300)
+[sync] scraped album /release/album/iron-and-wine/the-creek-drank-the-cradle/ (99/300)
+[sync] scraped album /release/ep/iron-and-wine/the-sea-and-the-rhythm/ (100/300)
+[sync] scraped album /release/album/iron-wine/our-endless-numbered-days-3/ (101/300)
+[sync] scraped album /release/album/m83/dead-cities-red-seas-and-lost-ghosts/ (102/300)
+[sync] scraped album /release/album/bob-marley-and-the-wailers/catch-a-fire/ (103/300)
+[sync] scraped album /release/album/bob-marley-and-the-wailers/natty-dread/ (104/300)
+[sync] scraped album /release/album/bob-marley-and-the-wailers/babylon-by-bus/ (105/300)
+[sync] scraped album /release/album/bob-marley-and-the-wailers/babylon-by-bus/ (105/300)
+[sync] scraped album /release/album/bob-marley-and-the-wailers/babylon-by-bus/ (105/300)
+[sync] scraped album /release/album/the-microphones/the-glow-pt-2-1/ (106/300)
+[sync] scraped album /release/album/moby/play/ (107/300)
+[sync] scraped album /release/album/moby/18/ (108/300)
+[sync] scraped album /release/album/the-mountain-goats/the-sunset-tree/ (109/300)
+[sync] scraped album /release/album/the-new-pornographers/challengers/ (110/300)
+[sync] scraped album /release/album/the-new-pornographers/challengers/ (110/300)
+[sync] scraped album /release/album/the-new-pornographers/challengers/ (110/300)
+[sync] scraped album /release/album/okkervil-river/black-sheep-boy/ (111/300)
+[sync] scraped album /release/ep/okkervil-river/black-sheep-boy-appendix/ (112/300)
+[sync] scraped album /release/album/alina-orlova/laukinis-suo-dingo/ (113/300)
+[sync] scraped album /release/album/pavement/crooked-rain-crooked-rain-11/ (114/300)
+[sync] scraped album /release/album/pavement/crooked-rain-crooked-rain-11/ (114/300)
+[sync] scraped album /release/album/pavement/crooked-rain-crooked-rain-11/ (114/300)
+[sync] scraped album /release/album/the-postal-service/give-up/ (115/300)
+[sync] scraped album /release/album/radiohead/amnesiac/ (116/300)
+[sync] scraped album /release/album/the-raveonettes/raven-in-the-grave/ (117/300)
+[sync] scraped album /release/album/miles-benjamin-anthony-robinson/miles-benjamin-anthony-robinson/ (118/300)
+[sync] scraped album /release/album/sigur-ros/-/ (119/300)
+[sync] scraped album /release/album/silver-jews/american-water/ (120/300)
+[sync] scraped list /list/elasticrock/my-500-favourite-albums/ (121/300)
+[sync] scraped list /list/ThreeOnThree/album-roulette-2/ (122/300)
+[sync] scraped list /list/No_Username/im-a-loser-baby-so-why-dont-you-kill-me/ (123/300)
+[sync] scraped list /list/drnick/notturni/ (124/300)
+[sync] scraped list /list/ambitionzasarater/checkkkkkkkkkkkkkkkkkkkkkkk/ (125/300)
+[sync] scraped list /list/Joao_Fonseca/nice-thank-i-cumed-pants/ (126/300)
+[sync] scraped list /list/CellarDoor85/when_the_melancholy_fit_shall_fall/ (127/300)
+[sync] scraped list /list/NateMa96/rym-top-1000-my-thoughts-and-ratings/ (128/300)
+[sync] scraped list /list/CK73/cks-all-time-bucket-list/ (129/300)
+[sync] scraped list /list/JesseAaron/top-releases-of-all-time/ (130/300)
+[sync] scraped list /list/noahh97/depressing-albums/ (131/300)
+[sync] scraped list /list/JO_Andy/-jo-andys-300-favorite-albums-/ (132/300)
+[sync] scraped list /list/TheEcologist/greatest-albums-of-all-time-1/ (133/300)
+[sync] scraped list /list/TheEcologist/greatest-albums-of-all-time-1/ (133/300)
+[sync] scraped list /list/TheEcologist/greatest-albums-of-all-time-1/ (133/300)
+[sync] scraped list /list/ChrisPC/rate-that-shit_anthology-of-chrispc-pop-music/ (134/300)
+[sync] scraped list /list/TheMercernarian/ranking-every-mu-essential-for-some-reason/ (135/300)
+[sync] scraped list /list/novocaine69/most-rated-albums-on-rym-closed/ (136/300)
+[sync] scraped list /list/kirha/kirha_radio_top_albums/ (137/300)
+[sync] scraped list /list/flamingswans/boomkat-recommendations-2025/ (138/300)
+[sync] scraped list /list/bobby667/dy_dy_dyce_dy-dycesdy_dyce/ (139/300)
+[sync] scraped list /list/ASpiritualMoon/astral-techno/ (140/300)
+[sync] scraped list /list/ASpiritualMoon/astral-techno/ (140/300)
+[sync] scraped list /list/ASpiritualMoon/astral-techno/ (140/300)
+[sync] scraped list /list/vagab0nd/night%e2%98%83drive/ (141/300)
+[sync] scraped list /list/ArthurEvan/%e1%b4%8d%ca%8f-%e1%b4%8d%e1%b4%9c%ea%9c%b1%c9%aa%e1%b4%84%e1%b4%80%ca%9f-%c9%aa%e1%b4%85%e1%b4%87%c9%b4%e1%b4%9b%c9%aa%e1%b4%9b%ca%8f/ (142/300)
+[sync] scraped list /list/GavinWright/favourite-archival-releases/ (143/300)
+[sync] scraped list /list/riquefc/as-far-as-atmospherics-beats-go-ambient-techno-evolution/ (144/300)
+[sync] scraped list /list/ditrixa/2025-listening-diary/ (145/300)
+[sync] scraped list /list/cas87/post_rock/ (146/300)
+[sync] scraped list /list/snarky/top_100_or_best_albums_of_the_90s/ (147/300)
+[sync] scraped list /list/Morgenholt/dying-breaths-of-an-era/ (148/300)
+[sync] scraped list /list/somax/10_10-in-music-genres/ (149/300)
+[sync] scraped list /list/isaiah33/ott-pulls-idm/ (150/300)
+[sync] scraped list /list/N3V3RW00RLD/actually-4-real-this-time-the-best-music-ive-ever-heard-in-my-whole-life/ (151/300)
+[sync] scraped list /list/coceng/albums_that_i_owe_my_life_to__/ (152/300)
+[sync] scraped list /list/yonico12344/2500_album_covers__work_in_progress_/ (153/300)
+[sync] scraped list /list/jrs15/2000-albums-favorite-to-least-favorite/ (154/300)
+[sync] scraped list /list/tobyshaw/reappraising-my-teenage-memories/ (155/300)
+[sync] scraped list /list/pauldrach/acclaimedmusic___all_albums/ (156/300)
+[sync] scraped list /list/psychedelicnightmare/scarlet-dahlias-identity-crisis/ (157/300)
+[sync] scraped list /list/jakelicious/2000___the_best_of__according_to_jake_/ (158/300)
+[sync] scraped list /list/AvidMusicFan/song_by_song_synopsis/ (159/300)
+[sync] scraped list /list/Indie_rok/my_rock_records__pop_rock__hard_rock__soft_rock__aor__glam_rock__alt_rock__etc_/ (160/300)
+[sync] scraped list /list/drnick/notturni/2/ (161/300)
+[sync] scraped list /list/Joao_Fonseca/nice-thank-i-cumed-pants/2/ (162/300)
+[sync] scraped list /list/ArthurEvan/%e1%b4%8d%ca%8f-%e1%b4%8d%e1%b4%9c%ea%9c%b1%c9%aa%e1%b4%84%e1%b4%80%ca%9f-%c9%aa%e1%b4%85%e1%b4%87%c9%b4%e1%b4%9b%c9%aa%e1%b4%9b%ca%8f/2/ (163/300)
+[sync] scraped list /list/ArthurEvan/%e1%b4%8d%ca%8f-%e1%b4%8d%e1%b4%9c%ea%9c%b1%c9%aa%e1%b4%84%e1%b4%80%ca%9f-%c9%aa%e1%b4%85%e1%b4%87%c9%b4%e1%b4%9b%c9%aa%e1%b4%9b%ca%8f/2/ (163/300)
+[sync] scraped list /list/ArthurEvan/%e1%b4%8d%ca%8f-%e1%b4%8d%e1%b4%9c%ea%9c%b1%c9%aa%e1%b4%84%e1%b4%80%ca%9f-%c9%aa%e1%b4%85%e1%b4%87%c9%b4%e1%b4%9b%c9%aa%e1%b4%9b%ca%8f/2/ (163/300)
+[sync] scraped list /list/GavinWright/favourite-archival-releases/2/ (164/300)
+[sync] scraped list /list/ditrixa/2025-listening-diary/2/ (165/300)
+[sync] scraped list /list/coceng/albums_that_i_owe_my_life_to__/2/ (166/300)
+[sync] scraped list /list/pauldrach/acclaimedmusic___all_albums/2/ (167/300)
+[sync] scraped twin-collection /collection/elasticrock/r5.0/ (168/300)
+[sync] scraped twin-collection /collection/elasticrock/r4.5/ (169/300)
+[sync] scraped twin-collection /collection/ThreeOnThree/r5.0/ (170/300)
+[sync] scraped twin-collection /collection/ThreeOnThree/r4.5/ (171/300)
+[sync] scraped twin-collection /collection/No/_username/r5.0/ (172/300)
+[sync] scraped twin-collection /collection/No/_username/r5.0/ (172/300)
+[sync] scraped twin-collection /collection/No/_username/r5.0/ (172/300)
+[sync] scraped twin-collection /collection/No/_username/r4.5/ (173/300)
+[sync] scraped twin-collection /collection/No/_username/r4.5/ (173/300)
+[sync] scraped twin-collection /collection/No/_username/r4.5/ (173/300)
+[sync] scraped twin-collection /collection/drnick/r5.0/ (174/300)
+[sync] scraped twin-collection /collection/drnick/r4.5/ (175/300)
+[sync] scraped twin-collection /collection/ambitionzasarater/r5.0/ (176/300)
+[sync] scraped twin-collection /collection/ambitionzasarater/r4.5/ (177/300)
+[sync] scraped twin-collection /collection/Joao_Fonseca/r5.0/ (178/300)
+[sync] scraped twin-collection /collection/Joao_Fonseca/r4.5/ (179/300)
+[sync] scraped twin-collection /collection/Joao_Fonseca/r4.5/ (179/300)
+[sync] scraped twin-collection /collection/Joao_Fonseca/r4.5/ (179/300)
+[sync] scraped twin-collection /collection/CellarDoor85/r5.0/ (180/300)
+[sync] scraped twin-collection /collection/CellarDoor85/r4.5/ (181/300)
+[sync] scraped twin-collection /collection/NateMaack/r5.0/ (182/300)
+[sync] scraped twin-collection /collection/NateMaack/r4.5/ (183/300)
+[sync] scraped twin-collection /collection/NateMaack/r4.5/ (183/300)
+[sync] scraped twin-collection /collection/NateMaack/r4.5/ (183/300)
+[sync] scraped twin-collection /collection/CK73/r5.0/ (184/300)
+[sync] scraped twin-collection /collection/CK73/r4.5/ (185/300)
+[sync] scraped twin-collection /collection/JesseAaron/r5.0/ (186/300)
+[sync] scraped twin-collection /collection/JesseAaron/r4.5/ (187/300)
+[sync] scraped twin-collection /collection/ThreeOnThree/r5.0/2/ (188/300)
+[sync] scraped twin-collection /collection/ThreeOnThree/r4.5/2/ (189/300)
+[sync] scraped twin-collection /collection/drnick/r5.0/2/ (190/300)
+[sync] scraped twin-collection /collection/drnick/r4.5/2/ (191/300)
+[sync] scraped twin-collection /collection/ambitionzasarater/r5.0/2/ (192/300)
+[sync] scraped twin-collection /collection/ambitionzasarater/r4.5/2/ (193/300)
+[sync] scraped twin-collection /collection/Joao_Fonseca/r5.0/2/ (194/300)
+[sync] scraped twin-collection /collection/CellarDoor85/r5.0/2/ (195/300)
+[sync] scraped twin-collection /collection/CellarDoor85/r4.5/2/ (196/300)
+[sync] scraped twin-collection /collection/NateMaack/r5.0/2/ (197/300)
+[sync] scraped twin-collection /collection/CK73/r5.0/2/ (198/300)
+[sync] scraped twin-collection /collection/CK73/r4.5/2/ (199/300)
+[sync] scraped twin-collection /collection/JesseAaron/r5.0/2/ (200/300)
+[sync] scraped twin-collection /collection/JesseAaron/r4.5/2/ (201/300)
+[sync] scraped genre-page /genre/singer-songwriter/ (202/300)
+[sync] scraped genre-page /genre/alternative-rock/ (203/300)
+[sync] scraped genre-page /genre/indie-pop/ (204/300)
+[sync] scraped genre-page /genre/indie-rock/ (205/300)
+[sync] scraped genre-page /genre/folk-rock/ (206/300)
+[sync] scraped genre-page /genre/indie-folk/ (207/300)
+[sync] scraped genre-page /genre/slacker-rock/ (208/300)
+[sync] scraped genre-page /genre/post-rock/ (209/300)
+[sync] scraped new-music /new-music/ (210/300)
+{
+  "pagesScraped": 210,
+  "fromCache": 28,
+  "parseFailures": [
+    {
+      "url": "/release/album/jackson-c-frank/jackson-c-frank/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/jackson-c-frank/jackson-c-frank/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/jackson-c-frank/jackson-c-frank/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/electrelane/no-shouts-no-calls/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/electrelane/no-shouts-no-calls/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/electrelane/no-shouts-no-calls/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/neutral-milk-hotel/in-the-aeroplane-over-the-sea/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/neutral-milk-hotel/in-the-aeroplane-over-the-sea/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/neutral-milk-hotel/in-the-aeroplane-over-the-sea/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/radiohead/hail-to-the-thief/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/radiohead/hail-to-the-thief/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/radiohead/hail-to-the-thief/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/bob-marley-and-the-wailers/babylon-by-bus/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/bob-marley-and-the-wailers/babylon-by-bus/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/bob-marley-and-the-wailers/babylon-by-bus/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/the-new-pornographers/challengers/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/the-new-pornographers/challengers/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/the-new-pornographers/challengers/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/pavement/crooked-rain-crooked-rain-11/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/pavement/crooked-rain-crooked-rain-11/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/release/album/pavement/crooked-rain-crooked-rain-11/",
+      "error": "not a RYM album page"
+    },
+    {
+      "url": "/list/TheEcologist/greatest-albums-of-all-time-1/",
+      "error": "not a RYM list page"
+    },
+    {
+      "url": "/list/TheEcologist/greatest-albums-of-all-time-1/",
+      "error": "not a RYM list page"
+    },
+    {
+      "url": "/list/TheEcologist/greatest-albums-of-all-time-1/",
+      "error": "not a RYM list page"
+    },
+    {
+      "url": "/list/ASpiritualMoon/astral-techno/",
+      "error": "not a RYM list page"
+    },
+    {
+      "url": "/list/ASpiritualMoon/astral-techno/",
+      "error": "not a RYM list page"
+    },
+    {
+      "url": "/list/ASpiritualMoon/astral-techno/",
+      "error": "not a RYM list page"
+    },
+    {
+      "url": "/list/ArthurEvan/%e1%b4%8d%ca%8f-%e1%b4%8d%e1%b4%9c%ea%9c%b1%c9%aa%e1%b4%84%e1%b4%80%ca%9f-%c9%aa%e1%b4%85%e1%b4%87%c9%b4%e1%b4%9b%c9%aa%e1%b4%9b%ca%8f/2/",
+      "error": "not a RYM list page"
+    },
+    {
+      "url": "/list/ArthurEvan/%e1%b4%8d%ca%8f-%e1%b4%8d%e1%b4%9c%ea%9c%b1%c9%aa%e1%b4%84%e1%b4%80%ca%9f-%c9%aa%e1%b4%85%e1%b4%87%c9%b4%e1%b4%9b%c9%aa%e1%b4%9b%ca%8f/2/",
+      "error": "not a RYM list page"
+    },
+    {
+      "url": "/list/ArthurEvan/%e1%b4%8d%ca%8f-%e1%b4%8d%e1%b4%9c%ea%9c%b1%c9%aa%e1%b4%84%e1%b4%80%ca%9f-%c9%aa%e1%b4%85%e1%b4%87%c9%b4%e1%b4%9b%c9%aa%e1%b4%9b%ca%8f/2/",
+      "error": "not a RYM list page"
+    },
+    {
+      "url": "/collection/No/_username/r5.0/",
+      "error": "not a RYM collection page"
+    },
+    {
+      "url": "/collection/No/_username/r5.0/",
+      "error": "not a RYM collection page"
+    },
+    {
+      "url": "/collection/No/_username/r5.0/",
+      "error": "not a RYM collection page"
+    },
+    {
+      "url": "/collection/No/_username/r4.5/",
+      "error": "not a RYM collection page"
+    },
+    {
+      "url": "/collection/No/_username/r4.5/",
+      "error": "not a RYM collection page"
+    },
+    {
+      "url": "/collection/No/_username/r4.5/",
+      "error": "not a RYM collection page"
+    },
+    {
+      "url": "/collection/Joao_Fonseca/r4.5/",
+      "error": "not a RYM collection page"
+    },
+    {
+      "url": "/collection/Joao_Fonseca/r4.5/",
+      "error": "not a RYM collection page"
+    },
+    {
+      "url": "/collection/Joao_Fonseca/r4.5/",
+      "error": "not a RYM collection page"
+    },
+    {
+      "url": "/collection/NateMaack/r4.5/",
+      "error": "not a RYM collection page"
+    },
+    {
+      "url": "/collection/NateMaack/r4.5/",
+      "error": "not a RYM collection page"
+    },
+    {
+      "url": "/collection/NateMaack/r4.5/",
+      "error": "not a RYM collection page"
+    }
+  ],
+  "budgetExhausted": false,
+  "counts": {
+    "albums": 2325,
+    "myRatings": 174,
+    "lists": 40,
+    "twins": 10,
+    "twinRatings": 362,
+    "charts": 9
+  }
+}
+[sync] done: 210 scraped, 28 from cache, 42 parse failures, budgetExhausted=false. Counts: {"albums":2325,"myRatings":174,"lists":40,"twins":10,"twinRatings":362,"charts":9}

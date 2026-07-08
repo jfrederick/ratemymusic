@@ -86,6 +86,32 @@ describe("GET /api/candidates", () => {
     const res = await app.request("/api/candidates?genre=slowcore");
     const body = await res.json();
     expect(body.total).toBe(1);
+
+    // Space/hyphen/case folding: 'Indie Folk' must match slug-form evidence 'indie-folk'.
+    const slugEvidence = seedAlbum(db, {
+      rymUrl: "/release/slug-evidence/",
+      artist: "Slug Artist",
+      title: "Slug Album",
+      genres: [],
+    });
+    seedCandidate(db, {
+      albumId: slugEvidence,
+      score: 0.5,
+      status: "new",
+      components: {
+        genre: {
+          score: 0.5,
+          evidence: {
+            method: "genre",
+            charts: [{ rymUrl: "/genre/indie-folk/", genre: "indie-folk", position: 1 }],
+          },
+        },
+      },
+    });
+    const spaced = await app.request("/api/candidates?genre=Indie%20Folk");
+    const spacedBody = await spaced.json();
+    expect(spacedBody.total).toBe(1);
+    expect(spacedBody.items[0].artist).toBe("Slug Artist");
     expect(body.items[0].artist).toBe("Artist High");
   });
 
