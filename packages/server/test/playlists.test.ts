@@ -190,9 +190,7 @@ describe("POST /api/playlists/tracks/keep", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true, playlistId: "kept1" });
 
-    expect(createPlaylist).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "RYM Keepers" }),
-    );
+    expect(createPlaylist).toHaveBeenCalledWith(expect.objectContaining({ name: "RYM Keepers" }));
     expect(addPlaylistItems).toHaveBeenCalledWith("kept1", ["spotify:track:tr1"]);
 
     const row = db
