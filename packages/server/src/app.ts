@@ -22,6 +22,7 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { streamSSE } from "hono/streaming";
 import { type ChatMessage, runChat } from "./chat/service.js";
+import { normalizeGenre } from "./chat/tools.js";
 import type { AppDeps } from "./deps.js";
 
 const MAX_CHAT_MESSAGES = 40;
@@ -67,11 +68,11 @@ function isValidNumericParam(raw: string | undefined): boolean {
  * album-page genre vocabulary exactly).
  */
 function matchesGenre(item: CandidateView, needle: string): boolean {
-  if (item.genres.some((g) => g.toLowerCase() === needle)) return true;
+  if (item.genres.some((g) => normalizeGenre(g) === needle)) return true;
   const genreComponent = item.components.genre;
   if (genreComponent && genreComponent.evidence.method === "genre") {
     return genreComponent.evidence.charts.some((chart) =>
-      chart.genre.toLowerCase().includes(needle),
+      normalizeGenre(chart.genre).includes(needle),
     );
   }
   return false;
@@ -183,7 +184,7 @@ export function createApp(deps: AppDeps): Hono {
       items = items.filter((item) => method in item.components);
     }
     if (genre) {
-      const needle = genre.toLowerCase();
+      const needle = normalizeGenre(genre);
       items = items.filter((item) => matchesGenre(item, needle));
     }
 
