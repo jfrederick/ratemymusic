@@ -1,4 +1,4 @@
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   BudgetLedger,
@@ -14,6 +14,7 @@ import {
   loadConfig,
   openDb,
   type pushDaily,
+  resolveRepoPath,
   type runDiscovery,
   type runSync,
 } from "@rmm/core";
@@ -46,11 +47,6 @@ export type AppDeps = {
 // This file lives at packages/server/src/deps.ts; walk up to the repo root.
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
-function resolveFromRoot(path: string): string {
-  if (path === ":memory:") return path;
-  return isAbsolute(path) ? path : join(REPO_ROOT, path);
-}
-
 /** Scraper stub used when no Firecrawl API key is configured -- the server still boots, but any sync attempt fails clearly. */
 class MissingFirecrawlKeyScraper implements Scraper {
   async scrape(): Promise<never> {
@@ -65,12 +61,12 @@ export function buildDeps(env: NodeJS.ProcessEnv = process.env): AppDeps {
   loadDotenv({ path: join(REPO_ROOT, ".env"), quiet: true });
 
   const config = loadConfig(env);
-  const db = openDb(resolveFromRoot(config.dbPath));
+  const db = openDb(resolveRepoPath(REPO_ROOT, config.dbPath));
   const budget = new BudgetLedger(db, { daily: config.budgetDaily, initial: config.budgetInitial });
 
   const apiKey = config.firecrawlApiKey ?? firecrawlApiKeyFromCli();
   const scraper: Scraper = apiKey
-    ? new FirecrawlScraper({ apiKey, cacheDir: resolveFromRoot("data/cache"), budget })
+    ? new FirecrawlScraper({ apiKey, cacheDir: resolveRepoPath(REPO_ROOT, "data/cache"), budget })
     : new MissingFirecrawlKeyScraper();
 
   const spotifyAuth = new SpotifyAuth({

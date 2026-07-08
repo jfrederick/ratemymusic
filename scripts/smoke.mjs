@@ -6,7 +6,7 @@
 // Usage: npm run smoke
 
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -73,19 +73,68 @@ async function waitForServer(child, timeoutMs) {
   );
 }
 
+/**
+ * Regression check for the cross-entrypoint RMM_DB_PATH resolution bug: entry points invoked
+ * with cwd != repo root (e.g. `npm run discover -w @rmm/core`, cwd `packages/core`) must still
+ * anchor a relative RMM_DB_PATH to the repo root, not to process.cwd(). Runs the built discover
+ * CLI directly with cwd set to packages/core and asserts the db file lands at
+ * `<repoRoot>/data/...`, not `packages/core/data/...`.
+ */
+function checkDiscoverCliResolvesDbPathToRepoRoot() {
+  const coreDir = join(REPO_ROOT, "packages/core");
+  const relativeDbPath = `data/smoke-tmp-${process.pid}-${Date.now()}.sqlite`;
+  const expectedAbsolutePath = join(REPO_ROOT, relativeDbPath);
+  const wrongAbsolutePath = join(coreDir, relativeDbPath);
+
+  try {
+    execFileSync("node", ["dist/cli/discover.js"], {
+      cwd: coreDir,
+      env: { ...process.env, RMM_DB_PATH: relativeDbPath },
+      stdio: "pipe",
+    });
+
+    assert(
+      existsSync(expectedAbsolutePath),
+      `expected discover CLI to create db at repo root (${expectedAbsolutePath}), but it does not exist`,
+    );
+    assert(
+      !existsSync(wrongAbsolutePath),
+      `discover CLI created db under packages/core (${wrongAbsolutePath}) instead of the repo root -- cwd-relative resolution regression`,
+    );
+  } finally {
+    if (existsSync(expectedAbsolutePath)) {
+      for (const suffix of ["", "-wal", "-shm"]) {
+        const p = expectedAbsolutePath + suffix;
+        if (existsSync(p)) unlinkSync(p);
+      }
+    }
+    if (existsSync(wrongAbsolutePath)) {
+      for (const suffix of ["", "-wal", "-shm"]) {
+        const p = wrongAbsolutePath + suffix;
+        if (existsSync(p)) unlinkSync(p);
+      }
+    }
+  }
+}
+
 async function main() {
   console.log("== ratemymusic smoke test ==");
 
-  console.log("\n[1/4] building @rmm/core ...");
+  console.log("\n[1/5] building @rmm/core ...");
   execFileSync("npm", ["run", "build", "-w", "@rmm/core"], {
     cwd: REPO_ROOT,
     stdio: "inherit",
   });
 
+  console.log("\n[2/5] checking discover CLI resolves RMM_DB_PATH against the repo root ...");
+  await step("discover CLI: relative RMM_DB_PATH resolves to <repoRoot>/data/..., not cwd", () =>
+    checkDiscoverCliResolvesDbPathToRepoRoot(),
+  );
+
   tempDir = mkdtempSync(join(tmpdir(), "rmm-smoke-"));
   const dbPath = join(tempDir, "smoke.sqlite");
 
-  console.log("\n[2/4] seeding temp database ...");
+  console.log("\n[3/5] seeding temp database ...");
   const corePath = pathToFileURL(join(REPO_ROOT, "packages/core/dist/index.js")).href;
   const { openDb, upsertAlbum } = await import(corePath);
 
@@ -129,7 +178,7 @@ async function main() {
     }
   }
 
-  console.log("\n[3/4] starting @rmm/server ...");
+  console.log("\n[4/5] starting @rmm/server ...");
   serverProcess = spawn("npm", ["run", "start", "-w", "@rmm/server"], {
     cwd: REPO_ROOT,
     env: {
@@ -146,7 +195,7 @@ async function main() {
   await waitForServer(serverProcess, SERVER_TIMEOUT_MS);
   console.log("server is up.");
 
-  console.log("\n[4/4] running assertions ...");
+  console.log("\n[5/5] running assertions ...");
   await step("GET /api/health -> 200 {ok:true}", async () => {
     const res = await fetch(`${BASE_URL}/api/health`);
     assert(res.status === 200, `expected 200, got ${res.status}`);

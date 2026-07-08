@@ -5,6 +5,7 @@ import { config as loadDotenv } from "dotenv";
 import { loadConfig } from "../config.js";
 import { openDb } from "../db.js";
 import { runDiscovery } from "../discovery/index.js";
+import { resolveRepoPath } from "../paths.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // This file lives at packages/core/{src,dist}/cli/discover.{ts,js}; walk up to the repo root.
@@ -20,7 +21,7 @@ type TopCandidateRow = {
 
 async function main(): Promise<void> {
   const config = loadConfig();
-  const db = openDb(config.dbPath);
+  const db = openDb(resolveRepoPath(repoRoot, config.dbPath));
 
   const result = await runDiscovery(db, { weights: config.blendWeights });
   console.log(`[discover] ${result.candidates} candidate(s) with status='new'`);
