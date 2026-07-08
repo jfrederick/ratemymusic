@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { config as loadDotEnv } from "dotenv";
 import { BudgetLedger } from "../budget.js";
 import { loadConfig } from "../config.js";
 import { openDb } from "../db.js";
 import { runSync } from "../ingest/sync.js";
+import { resolveRepoPath } from "../paths.js";
 import { FirecrawlScraper, firecrawlApiKeyFromCli } from "../scrape/firecrawl.js";
 
 // packages/core/src/cli/sync.ts -> repo root is four directories up.
@@ -27,10 +28,6 @@ function parseArgs(argv: string[]): { maxPages?: number } {
   return out;
 }
 
-function resolveFromRoot(path: string): string {
-  return isAbsolute(path) ? path : join(REPO_ROOT, path);
-}
-
 async function main(): Promise<void> {
   loadDotEnv({ path: join(REPO_ROOT, ".env") });
 
@@ -46,11 +43,11 @@ async function main(): Promise<void> {
     return;
   }
 
-  const db = openDb(resolveFromRoot(config.dbPath));
+  const db = openDb(resolveRepoPath(REPO_ROOT, config.dbPath));
   const budget = new BudgetLedger(db, { daily: config.budgetDaily, initial: config.budgetInitial });
   const scraper = new FirecrawlScraper({
     apiKey,
-    cacheDir: resolveFromRoot("data/cache"),
+    cacheDir: resolveRepoPath(REPO_ROOT, "data/cache"),
     budget,
   });
 

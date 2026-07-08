@@ -152,6 +152,13 @@ smoke test) recreates the full schema via `runMigrations` on first open of a
 missing/empty file. Just delete the file(s) above and the next `sync`/`discover`/
 `serve` invocation rebuilds the schema automatically.
 
+**Path resolution:** a relative `RMM_DB_PATH` is always resolved against the repo
+root (via `resolveRepoPath` in `@rmm/core`), never against `process.cwd()` — so
+`npm run discover -w @rmm/core` (cwd `packages/core`) and `npm run start -w
+@rmm/server` (cwd `packages/server`) both still read/write `<repo root>/data/rmm.sqlite`
+for the default path above; the `rm` command in this section should always be run
+from the repo root.
+
 ## Chat unavailable
 
 Symptom: `POST /api/chat` returns `503 { error: "chat unavailable — set ANTHROPIC_API_KEY" }`,

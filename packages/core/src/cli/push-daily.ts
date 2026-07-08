@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { config as loadDotenv } from "dotenv";
 import { loadConfig } from "../config.js";
 import { openDb } from "../db.js";
+import { resolveRepoPath } from "../paths.js";
 import { SpotifyAuth, SpotifyClient } from "../spotify/client.js";
 import { pushDaily } from "../spotify/daily.js";
 
@@ -13,7 +14,7 @@ loadDotenv({ path: resolve(repoRoot, ".env"), quiet: true });
 
 async function main(): Promise<void> {
   const config = loadConfig();
-  const db = openDb(config.dbPath);
+  const db = openDb(resolveRepoPath(repoRoot, config.dbPath));
   const auth = new SpotifyAuth({
     db,
     clientId: config.spotifyClientId,
