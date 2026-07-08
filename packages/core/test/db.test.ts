@@ -83,6 +83,19 @@ describe("openDb", () => {
     db.close();
   });
 
+  it("adds albums.spotify_artist_id via migration and reports the full user_version", () => {
+    const db = openDb(":memory:");
+    const version = db.pragma("user_version", { simple: true });
+    expect(version).toBe(MIGRATIONS.length);
+
+    const columns = db
+      .prepare("PRAGMA table_info(albums)")
+      .all()
+      .map((row) => (row as { name: string }).name);
+    expect(columns).toContain("spotify_artist_id");
+    db.close();
+  });
+
   it("enforces UNIQUE on albums.rym_url", () => {
     const db = openDb(":memory:");
     const insert = db.prepare(

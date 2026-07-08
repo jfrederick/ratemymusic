@@ -63,3 +63,19 @@ export type { QueueKind } from "./ingest/frontier.js";
 export { TTL_DAYS } from "./ingest/ttl.js";
 export { runSync } from "./ingest/sync.js";
 export type { SyncOptions, SyncReport } from "./ingest/sync.js";
+
+// Spotify integration
+export { generateVerifier, challengeFromVerifier, buildAuthorizeUrl } from "./spotify/pkce.js";
+export { SpotifyAuth, SpotifyAuthError, SpotifyClient, SpotifyApiError } from "./spotify/client.js";
+export { resolveAlbum } from "./spotify/resolve.js";
+export { pickTracks } from "./spotify/pick.js";
+export {
+  buildAndPushPlaylist,
+  rollingPlaylistId,
+  setRollingPlaylistId,
+} from "./spotify/playlist.js";
+export type {
+  BuildAndPushPlaylistOptions,
+  BuildAndPushPlaylistResult,
+} from "./spotify/playlist.js";
+export { pushDaily } from "./spotify/daily.js";

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.jim.ratemymusic.daily</string>
+
+  <!-- Update this to the output of `which npm` on your machine if it differs. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/jim/.local/bin/npm</string>
+    <string>run</string>
+    <string>push-daily</string>
+    <string>-w</string>
+    <string>@rmm/core</string>
+  </array>
+
+  <!-- Update this to the absolute path of your ratemymusic checkout. -->
+  <key>WorkingDirectory</key>
+  <string>/Users/jim/dev/jim/ratemymusic</string>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>7</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/jim/dev/jim/ratemymusic/data/logs/push-daily.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/jim/dev/jim/ratemymusic/data/logs/push-daily.err.log</string>
+
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>
