@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
-export type Route = "/" | "/discover" | "/playlists" | "/settings";
+export type Route = "/" | "/discover" | "/playlists" | "/chat" | "/settings";
 
-const KNOWN_ROUTES: Route[] = ["/", "/discover", "/playlists", "/settings"];
+const KNOWN_ROUTES: Route[] = ["/", "/discover", "/playlists", "/chat", "/settings"];
 
 function normalize(hash: string): Route {
   const path = hash.replace(/^#/, "") || "/";

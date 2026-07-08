@@ -143,3 +143,20 @@ export function IconSparkle(props: IconProps) {
     </Svg>
   );
 }
+
+export function IconChat(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 5.5h16v10H9l-4 3.5v-3.5H4v-10z" />
+    </Svg>
+  );
+}
+
+export function IconSend(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4.5 12L19 4.5l-4 15-4.5-6-6-1.5z" />
+      <path d="M15 8.5l-4.5 4.5" />
+    </Svg>
+  );
+}

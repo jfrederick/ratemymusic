@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, api, describeError, isDisconnectedError } from "../src/api";
+import { ApiError, api, describeError, isDisconnectedError, streamChat } from "../src/api";
 
 function jsonResponse(body: unknown, init: { status?: number; statusText?: string } = {}) {
   return new Response(JSON.stringify(body), {
@@ -160,5 +160,105 @@ describe("api request construction", () => {
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe("/api/queue/42");
     expect(init?.method).toBe("DELETE");
+  });
+});
+
+describe("streamChat", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function sseResponse(chunks: string[]): Response {
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        const encoder = new TextEncoder();
+        for (const chunk of chunks) controller.enqueue(encoder.encode(chunk));
+        controller.close();
+      },
+    });
+    return new Response(stream, {
+      status: 200,
+      headers: { "Content-Type": "text/event-stream" },
+    });
+  }
+
+  it("parses delta/tool/done SSE frames progressively as the stream arrives, even split mid-frame", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve(
+          sseResponse([
+            'event: delta\ndata: {"text":"Hel',
+            'lo"}\n\n',
+            'event: tool\ndata: {"name":"search_candidates"}\n\n',
+            'event: delta\ndata: {"text":" there"}\n\n',
+            'event: done\ndata: {"text":"Hello there","toolEvents":[{"name":"search_candidates","ok":true}]}\n\n',
+          ]),
+        ),
+      ),
+    );
+
+    const deltas: string[] = [];
+    const tools: string[] = [];
+    let done: unknown;
+    await streamChat([{ role: "user", content: "hi" }], {
+      onDelta: (t) => deltas.push(t),
+      onTool: (n) => tools.push(n),
+      onDone: (r) => {
+        done = r;
+      },
+    });
+
+    expect(deltas).toEqual(["Hello", " there"]);
+    expect(tools).toEqual(["search_candidates"]);
+    expect(done).toEqual({
+      text: "Hello there",
+      toolEvents: [{ name: "search_candidates", ok: true }],
+    });
+  });
+
+  it("dispatches an error event via onError", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(sseResponse(['event: error\ndata: {"message":"boom"}\n\n']))),
+    );
+
+    const errors: string[] = [];
+    await streamChat([{ role: "user", content: "hi" }], { onError: (m) => errors.push(m) });
+    expect(errors).toEqual(["boom"]);
+  });
+
+  it("throws ApiError with the server message on a 503 (chat unavailable), before any streaming", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ error: "chat unavailable — set ANTHROPIC_API_KEY" }), {
+            status: 503,
+          }),
+        ),
+      ),
+    );
+
+    await expect(streamChat([{ role: "user", content: "hi" }], {})).rejects.toMatchObject({
+      name: "ApiError",
+      status: 503,
+      message: "chat unavailable — set ANTHROPIC_API_KEY",
+    });
+  });
+
+  it("POSTs the message history as JSON", async () => {
+    const fetchMock = vi.fn((..._args: [input: RequestInfo | URL, init?: RequestInit]) =>
+      Promise.resolve(sseResponse([])),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const messages = [{ role: "user" as const, content: "hi" }];
+    await streamChat(messages, {});
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("/api/chat");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe(JSON.stringify({ messages }));
   });
 });
