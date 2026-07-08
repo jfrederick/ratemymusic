@@ -11,7 +11,8 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
     "lint": "biome check .",
-    "format": "biome check --write ."
+    "format": "biome check --write .",
+    "sync": "npm run sync -w @rmm/core --"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
