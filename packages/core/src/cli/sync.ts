@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { config as loadDotEnv } from "dotenv";
 import { BudgetLedger } from "../budget.js";
 import { loadConfig } from "../config.js";
 import { openDb } from "../db.js";
@@ -10,29 +10,6 @@ import { FirecrawlScraper, firecrawlApiKeyFromCli } from "../scrape/firecrawl.js
 
 // packages/core/src/cli/sync.ts -> repo root is four directories up.
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
-
-/** Minimal `.env` loader: KEY=VALUE per line, '#' comments, blank lines ignored. Never overrides already-set env vars. */
-function loadDotEnv(path: string): void {
-  if (!existsSync(path)) return;
-  const contents = readFileSync(path, "utf-8");
-  for (const rawLine of contents.split("\n")) {
-    const line = rawLine.trim();
-    if (line === "" || line.startsWith("#")) continue;
-    const eq = line.indexOf("=");
-    if (eq === -1) continue;
-    const key = line.slice(0, eq).trim();
-    let value = line.slice(eq + 1).trim();
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1);
-    }
-    if (process.env[key] === undefined) {
-      process.env[key] = value;
-    }
-  }
-}
 
 function parseArgs(argv: string[]): { maxPages?: number } {
   const out: { maxPages?: number } = {};
@@ -55,7 +32,7 @@ function resolveFromRoot(path: string): string {
 }
 
 async function main(): Promise<void> {
-  loadDotEnv(join(REPO_ROOT, ".env"));
+  loadDotEnv({ path: join(REPO_ROOT, ".env") });
 
   const config = loadConfig(process.env);
   const { maxPages } = parseArgs(process.argv.slice(2));

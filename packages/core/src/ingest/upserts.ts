@@ -11,8 +11,10 @@ type AlbumUpsert = AlbumRef &
 /**
  * Inserts or enriches an album row, keyed by `rym_url`. On conflict, `artist`/`title` are
  * overwritten only when non-empty (guards against the list parser's empty-artist fallback),
- * and every other field is overwritten only when the incoming value is present -- existing
- * enrichment data is never nulled by a later, less-informed sighting of the same album.
+ * `genres`/`descriptors` are overwritten only when the incoming array is non-empty (guards
+ * against a later, less-informed sighting nulling out prior enrichment with `[]`), and every
+ * other field is overwritten only when the incoming value is present -- existing enrichment
+ * data is never nulled by a later, less-informed sighting of the same album.
  */
 export function upsertAlbum(db: DatabaseType, ref: AlbumUpsert): number {
   const existing = db.prepare("SELECT id FROM albums WHERE rym_url = ?").get(ref.rymUrl) as
@@ -68,11 +70,11 @@ export function upsertAlbum(db: DatabaseType, ref: AlbumUpsert): number {
     sets.push("rym_num_ratings = ?");
     params.push(ref.rymNumRatings);
   }
-  if (ref.genres !== undefined) {
+  if (ref.genres !== undefined && ref.genres.length > 0) {
     sets.push("genres = ?");
     params.push(JSON.stringify(ref.genres));
   }
-  if (ref.descriptors !== undefined) {
+  if (ref.descriptors !== undefined && ref.descriptors.length > 0) {
     sets.push("descriptors = ?");
     params.push(JSON.stringify(ref.descriptors));
   }

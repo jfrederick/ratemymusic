@@ -75,6 +75,23 @@ describe("upserts: albums", () => {
     const row = db.prepare("SELECT year FROM albums WHERE id = ?").get(id) as { year: number };
     expect(row.year).toBe(2007);
   });
+
+  it("does not overwrite non-empty genres/descriptors with an empty array on re-upsert", () => {
+    const db = openDb(":memory:");
+    const id = upsertAlbum(db, { ...FOR_EMMA, genres: ["A"] });
+    upsertAlbum(db, { ...FOR_EMMA, genres: [] });
+
+    const row = db.prepare("SELECT genres FROM albums WHERE id = ?").get(id) as {
+      genres: string;
+    };
+    expect(JSON.parse(row.genres)).toEqual(["A"]);
+
+    upsertAlbum(db, { ...FOR_EMMA, genres: ["B"] });
+    const row2 = db.prepare("SELECT genres FROM albums WHERE id = ?").get(id) as {
+      genres: string;
+    };
+    expect(JSON.parse(row2.genres)).toEqual(["B"]);
+  });
 });
 
 describe("upserts: my_ratings", () => {
